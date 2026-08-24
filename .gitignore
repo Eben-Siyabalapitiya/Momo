@@ -1,0 +1,8 @@
+.env
+config.json
+memory.json
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.log
