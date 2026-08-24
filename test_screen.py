@@ -12,7 +12,6 @@ spi = board.SPI()
 
 disp = st7735.ST7735R(
     spi,
-    rotation=90,
     cs=cs_pin,
     dc=dc_pin,
     rst=reset_pin,
@@ -23,8 +22,8 @@ disp = st7735.ST7735R(
     y_offset=0,
 )
 
-width = disp.width
-height = disp.height
+width = 128
+height = 160
 
 image = Image.new("RGB", (width, height))
 draw = ImageDraw.Draw(image)
