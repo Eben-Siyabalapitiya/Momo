@@ -25,6 +25,8 @@ PAGE = """
   .row .val { width:3rem; text-align:right; font-variant-numeric:tabular-nums; }
   .btns { display:flex; gap:0.5rem; margin-top:0.5rem; }
   .btns button { flex:1; padding:0.4rem; font-size:0.85rem; }
+  .leg { margin-bottom:1.4rem; }
+  .leg h2 { font-size:1rem; color:#9c9486; margin:0 0 0.5rem; text-transform:uppercase; letter-spacing:0.05em; }
 </style>
 </head>
 <body>
@@ -33,18 +35,23 @@ PAGE = """
     <button class="primary" onclick="allCenter()">All &rarr; 90&deg;</button>
     <button class="danger" onclick="allRelease()">Release All</button>
   </div>
-  {% for ch in range(8) %}
-  <div class="channel">
-    <div class="row">
-      <label>CH {{ ch }}</label>
-      <input type="range" min="0" max="180" value="90" id="slider{{ ch }}"
-             oninput="onSlide({{ ch }}, this.value)">
-      <span class="val" id="val{{ ch }}">90</span>
+  {% for leg in legs %}
+  <div class="leg">
+    <h2>{{ leg.name }}</h2>
+    {% for joint in [("Hip (swing)", leg.hip), ("Knee (lift)", leg.knee)] %}
+    <div class="channel">
+      <div class="row">
+        <label>{{ joint[0] }}</label>
+        <input type="range" min="0" max="180" value="90" id="slider{{ joint[1] }}"
+               oninput="onSlide({{ joint[1] }}, this.value)">
+        <span class="val" id="val{{ joint[1] }}">90</span>
+      </div>
+      <div class="btns">
+        <button onclick="center({{ joint[1] }})">Center 90&deg;</button>
+        <button onclick="release({{ joint[1] }})">Release</button>
+      </div>
     </div>
-    <div class="btns">
-      <button onclick="center({{ ch }})">Center 90&deg;</button>
-      <button onclick="release({{ ch }})">Release</button>
-    </div>
+    {% endfor %}
   </div>
   {% endfor %}
 
@@ -85,9 +92,17 @@ function allRelease() {
 """
 
 
+LEGS_ORDER = [
+    {"name": "Front Right", "hip": 2, "knee": 3},
+    {"name": "Back Right", "hip": 6, "knee": 7},
+    {"name": "Front Left", "hip": 0, "knee": 1},
+    {"name": "Back Left", "hip": 4, "knee": 5},
+]
+
+
 @app.route("/")
 def index():
-    return render_template_string(PAGE)
+    return render_template_string(PAGE, legs=LEGS_ORDER)
 
 
 @app.route("/set", methods=["POST"])
