@@ -27,6 +27,7 @@ PAGE = """
   .btns button { flex:1; padding:0.4rem; font-size:0.85rem; }
   .leg { margin-bottom:1.4rem; }
   .leg h2 { font-size:1rem; color:#9c9486; margin:0 0 0.5rem; text-transform:uppercase; letter-spacing:0.05em; }
+  .offset { font-size:0.8rem; color:#9c9486; margin-top:0.3rem; font-variant-numeric:tabular-nums; }
 </style>
 </head>
 <body>
@@ -46,9 +47,11 @@ PAGE = """
                oninput="onSlide({{ joint[1] }}, this.value)">
         <span class="val" id="val{{ joint[1] }}">90</span>
       </div>
+      <div class="offset" id="offset{{ joint[1] }}">offset: {{ "%+d"|format(offsets[joint[1]|string]) }}&deg;</div>
       <div class="btns">
         <button onclick="center({{ joint[1] }})">Center 90&deg;</button>
         <button onclick="release({{ joint[1] }})">Release</button>
+        <button class="primary" onclick="setZero({{ joint[1] }})">Set as Zero</button>
       </div>
     </div>
     {% endfor %}
@@ -79,6 +82,18 @@ function release(ch) {
   post("/release", {channel: ch});
 }
 
+async function setZero(ch) {
+  const res = await fetch("/set_zero", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({channel: ch})
+  });
+  const data = await res.json();
+  document.getElementById("offset" + ch).textContent = "offset: " + (data.offset >= 0 ? "+" : "") + data.offset + "°";
+  document.getElementById("slider" + ch).value = 90;
+  document.getElementById("val" + ch).textContent = 90;
+}
+
 function allCenter() {
   for (let ch = 0; ch < 8; ch++) center(ch);
 }
@@ -102,7 +117,8 @@ LEGS_ORDER = [
 
 @app.route("/")
 def index():
-    return render_template_string(PAGE, legs=LEGS_ORDER)
+    offsets = {str(ch): servos.get_offset(ch) for ch in range(8)}
+    return render_template_string(PAGE, legs=LEGS_ORDER, offsets=offsets)
 
 
 @app.route("/set", methods=["POST"])
@@ -124,6 +140,14 @@ def release():
     data = request.get_json()
     servos.release_channel(int(data["channel"]))
     return "", 204
+
+
+@app.route("/set_zero", methods=["POST"])
+def set_zero():
+    data = request.get_json()
+    channel = int(data["channel"])
+    servos.zero_here(channel)
+    return {"offset": servos.get_offset(channel)}
 
 
 if __name__ == "__main__":
