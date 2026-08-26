@@ -1,9 +1,38 @@
+import json
+import os
 from adafruit_servokit import ServoKit
+
+CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
 
 kit = ServoKit(channels=16)
 
+offsets = {str(ch): 0 for ch in range(8)}
+
+if os.path.exists(CONFIG_PATH):
+    with open(CONFIG_PATH) as f:
+        saved = json.load(f)
+    offsets.update(saved.get("offsets", {}))
+
+current_physical = {}
+
 for _ch in range(8):
-    kit.servo[_ch].angle = 90
+    physical = max(0, min(180, 90 + offsets[str(_ch)]))
+    kit.servo[_ch].angle = physical
+    current_physical[str(_ch)] = physical
+
+
+def save_offsets():
+    with open(CONFIG_PATH, "w") as f:
+        json.dump({"offsets": offsets}, f, indent=2)
+
+
+def set_offset(channel, offset):
+    offsets[str(channel)] = offset
+    save_offsets()
+
+
+def get_offset(channel):
+    return offsets.get(str(channel), 0)
 
 LEGS = {
     "FR": {"hip": 0, "knee": 1, "sign": -1},
@@ -14,12 +43,18 @@ LEGS = {
 
 
 def set_channel(channel, angle):
-    angle = max(0, min(180, angle))
-    kit.servo[channel].angle = angle
+    physical = max(0, min(180, angle + offsets[str(channel)]))
+    kit.servo[channel].angle = physical
+    current_physical[str(channel)] = physical
 
 
 def center_channel(channel):
     set_channel(channel, 90)
+
+
+def zero_here(channel):
+    offset = current_physical[str(channel)] - 90
+    set_offset(channel, offset)
 
 
 def release_channel(channel):
