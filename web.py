@@ -93,10 +93,10 @@ function allRelease() {
 
 
 LEGS_ORDER = [
-    {"name": "Front Right", "hip": 2, "knee": 3},
-    {"name": "Back Right", "hip": 6, "knee": 7},
-    {"name": "Front Left", "hip": 0, "knee": 1},
-    {"name": "Back Left", "hip": 4, "knee": 5},
+    {"name": "Front Right", "hip": 0, "knee": 1},
+    {"name": "Back Right", "hip": 2, "knee": 3},
+    {"name": "Front Left", "hip": 4, "knee": 5},
+    {"name": "Back Left", "hip": 6, "knee": 7},
 ]
 
 
