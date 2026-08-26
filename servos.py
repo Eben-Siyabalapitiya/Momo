@@ -2,6 +2,9 @@ from adafruit_servokit import ServoKit
 
 kit = ServoKit(channels=16)
 
+for _ch in range(8):
+    kit.servo[_ch].angle = 90
+
 LEGS = {
     "FR": {"hip": 0, "knee": 1, "sign": -1},
     "BR": {"hip": 2, "knee": 3, "sign": -1},
