@@ -3,10 +3,10 @@ from adafruit_servokit import ServoKit
 kit = ServoKit(channels=16)
 
 LEGS = {
-    "FL": {"hip": 0, "knee": 1, "sign": 1},
-    "FR": {"hip": 2, "knee": 3, "sign": -1},
-    "BL": {"hip": 4, "knee": 5, "sign": 1},
-    "BR": {"hip": 6, "knee": 7, "sign": -1},
+    "FR": {"hip": 0, "knee": 1, "sign": -1},
+    "BR": {"hip": 2, "knee": 3, "sign": -1},
+    "FL": {"hip": 4, "knee": 5, "sign": 1},
+    "BL": {"hip": 6, "knee": 7, "sign": 1},
 }
 
 
