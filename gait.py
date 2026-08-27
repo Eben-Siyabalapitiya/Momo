@@ -2,8 +2,8 @@ import time
 import servos
 
 HIP_SWING = 25
-KNEE_LIFT = 25
-KNEE_STANCE = 105
+KNEE_LIFT = 15
+KNEE_STANCE = 60
 STEP_DELAY = 0.3
 
 LEG_ORDER = ["FR", "BL", "FL", "BR"]
