@@ -83,7 +83,10 @@ PAGE = """
       <div class="btns">
         <button onclick="center({{ joint[1] }})">Center 90&deg;</button>
         <button onclick="release({{ joint[1] }})">Release</button>
-        <button class="primary" onclick="setZero({{ joint[1] }})">Set as Zero</button>
+      </div>
+      <div class="btns">
+        <button class="primary" onclick="setZero({{ joint[1] }}, 90)">Set as Zero (90&deg;)</button>
+        <button class="primary" onclick="setZero({{ joint[1] }}, 0)">Set as Floor (0&deg;)</button>
       </div>
     </div>
     {% endfor %}
@@ -123,16 +126,16 @@ function release(ch) {
   post("/release", {channel: ch});
 }
 
-async function setZero(ch) {
+async function setZero(ch, target) {
   const res = await fetch("/set_zero", {
     method: "POST",
     headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({channel: ch})
+    body: JSON.stringify({channel: ch, target: target})
   });
   const data = await res.json();
   document.getElementById("offset" + ch).textContent = "offset: " + (data.offset >= 0 ? "+" : "") + data.offset + "°";
-  document.getElementById("slider" + ch).value = 90;
-  document.getElementById("val" + ch).textContent = 90;
+  document.getElementById("slider" + ch).value = target;
+  document.getElementById("val" + ch).textContent = target;
 }
 
 function allCenter() {
@@ -192,7 +195,8 @@ def release():
 def set_zero():
     data = request.get_json()
     channel = int(data["channel"])
-    servos.zero_here(channel)
+    target = int(data.get("target", 90))
+    servos.calibrate_here(channel, target)
     return {"offset": servos.get_offset(channel)}
 
 

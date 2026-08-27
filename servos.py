@@ -52,9 +52,17 @@ def center_channel(channel):
     set_channel(channel, 90)
 
 
-def zero_here(channel):
-    offset = current_physical[str(channel)] - 90
+def calibrate_here(channel, target):
+    offset = current_physical[str(channel)] - target
     set_offset(channel, offset)
+
+
+def zero_here(channel):
+    calibrate_here(channel, 90)
+
+
+def floor_here(channel):
+    calibrate_here(channel, 0)
 
 
 def release_channel(channel):
