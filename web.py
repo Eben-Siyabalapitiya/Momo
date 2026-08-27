@@ -116,9 +116,21 @@ async function post(url, body) {
   });
 }
 
+const THROTTLE_MS = 60;
+let lastSend = {};
+
+function throttled(key, fn) {
+  const now = Date.now();
+  if (now - (lastSend[key] || 0) < THROTTLE_MS) return;
+  lastSend[key] = now;
+  fn();
+}
+
 function onSlide(ch, angle) {
   document.getElementById("val" + ch).textContent = angle;
-  post("/set", {channel: ch, angle: parseInt(angle)});
+  throttled("ch" + ch, function() {
+    post("/set", {channel: ch, angle: parseInt(angle)});
+  });
 }
 
 function jump(ch, angle) {
@@ -132,7 +144,11 @@ function groupSlide(channels, angle, valId) {
   channels.forEach(function(ch) {
     document.getElementById("slider" + ch).value = angle;
     document.getElementById("val" + ch).textContent = angle;
-    post("/set", {channel: ch, angle: parseInt(angle)});
+  });
+  throttled("group" + channels.join("-"), function() {
+    post("/set_multi", {
+      channels: channels.map(function(ch) { return {channel: ch, angle: parseInt(angle)}; })
+    });
   });
 }
 
@@ -209,6 +225,14 @@ def set_angle():
     return "", 204
 
 
+@app.route("/set_multi", methods=["POST"])
+def set_multi():
+    data = request.get_json()
+    for item in data["channels"]:
+        servos.set_channel(int(item["channel"]), int(item["angle"]))
+    return "", 204
+
+
 @app.route("/release", methods=["POST"])
 def release():
     data = request.get_json()
@@ -232,4 +256,4 @@ def reset_all():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=5000, threaded=True)
