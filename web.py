@@ -27,7 +27,7 @@ PAGE = """
   .btns button { flex:1; padding:0.4rem; font-size:0.85rem; }
   .leg { margin-bottom:1.4rem; }
   .leg h2 { font-size:1rem; color:#9c9486; margin:0 0 0.5rem; text-transform:uppercase; letter-spacing:0.05em; }
-  .offset { font-size:0.8rem; color:#9c9486; margin-top:0.3rem; font-variant-numeric:tabular-nums; }
+  .startup { font-size:0.8rem; color:#9c9486; margin-top:0.3rem; font-variant-numeric:tabular-nums; }
   .side-group { margin-bottom:1.6rem; padding:1rem 1.1rem; border:1px solid #2c313a;
                 border-radius:10px; background:#161a20; }
   .side-group h2 { font-size:1.15rem; margin:0 0 0.9rem; }
@@ -43,6 +43,7 @@ PAGE = """
   <div class="topbar">
     <button class="primary" onclick="allCenter()">All &rarr; 90&deg;</button>
     <button class="danger" onclick="allRelease()">Release All</button>
+    <button class="danger" onclick="resetAll()">Reset All</button>
   </div>
   {% for group in groups %}
   <div class="side-group">
@@ -75,18 +76,19 @@ PAGE = """
     <div class="channel">
       <div class="row">
         <label>{{ joint[0] }}</label>
-        <input type="range" min="0" max="180" value="90" id="slider{{ joint[1] }}"
+        <input type="range" min="0" max="180" value="{{ startups[joint[1]|string] }}" id="slider{{ joint[1] }}"
                oninput="onSlide({{ joint[1] }}, this.value)">
-        <span class="val" id="val{{ joint[1] }}">90</span>
+        <span class="val" id="val{{ joint[1] }}">{{ startups[joint[1]|string] }}</span>
       </div>
-      <div class="offset" id="offset{{ joint[1] }}">offset: {{ "%+d"|format(offsets[joint[1]|string]) }}&deg;</div>
+      <div class="startup" id="startup{{ joint[1] }}">startup: {{ startups[joint[1]|string] }}&deg;</div>
       <div class="btns">
-        <button onclick="center({{ joint[1] }})">Center 90&deg;</button>
+        <button onclick="jump({{ joint[1] }}, 0)">0&deg;</button>
+        <button onclick="jump({{ joint[1] }}, 90)">90&deg;</button>
+        <button onclick="jump({{ joint[1] }}, 180)">180&deg;</button>
         <button onclick="release({{ joint[1] }})">Release</button>
       </div>
       <div class="btns">
-        <button class="primary" onclick="setZero({{ joint[1] }}, 90)">Set as Zero (90&deg;)</button>
-        <button class="primary" onclick="setZero({{ joint[1] }}, 0)">Set as Floor (0&deg;)</button>
+        <button class="primary" onclick="saveStartup({{ joint[1] }})">Save as Startup</button>
       </div>
     </div>
     {% endfor %}
@@ -107,6 +109,12 @@ function onSlide(ch, angle) {
   post("/set", {channel: ch, angle: parseInt(angle)});
 }
 
+function jump(ch, angle) {
+  document.getElementById("slider" + ch).value = angle;
+  document.getElementById("val" + ch).textContent = angle;
+  post("/set", {channel: ch, angle: angle});
+}
+
 function groupSlide(channels, angle, valId) {
   document.getElementById(valId).textContent = angle;
   channels.forEach(function(ch) {
@@ -116,34 +124,36 @@ function groupSlide(channels, angle, valId) {
   });
 }
 
-function center(ch) {
-  document.getElementById("slider" + ch).value = 90;
-  document.getElementById("val" + ch).textContent = 90;
-  post("/center", {channel: ch});
-}
-
 function release(ch) {
   post("/release", {channel: ch});
 }
 
-async function setZero(ch, target) {
-  const res = await fetch("/set_zero", {
+async function saveStartup(ch) {
+  const angle = parseInt(document.getElementById("slider" + ch).value);
+  const res = await fetch("/save_startup", {
     method: "POST",
     headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({channel: ch, target: target})
+    body: JSON.stringify({channel: ch, angle: angle})
   });
   const data = await res.json();
-  document.getElementById("offset" + ch).textContent = "offset: " + (data.offset >= 0 ? "+" : "") + data.offset + "°";
-  document.getElementById("slider" + ch).value = target;
-  document.getElementById("val" + ch).textContent = target;
+  document.getElementById("startup" + ch).textContent = "startup: " + data.startup + "°";
 }
 
 function allCenter() {
-  for (let ch = 0; ch < 8; ch++) center(ch);
+  for (let ch = 0; ch < 8; ch++) jump(ch, 90);
 }
 
 function allRelease() {
   for (let ch = 0; ch < 8; ch++) release(ch);
+}
+
+async function resetAll() {
+  await post("/reset_all", {});
+  for (let ch = 0; ch < 8; ch++) {
+    document.getElementById("slider" + ch).value = 90;
+    document.getElementById("val" + ch).textContent = 90;
+    document.getElementById("startup" + ch).textContent = "startup: 90°";
+  }
 }
 </script>
 </body>
@@ -166,21 +176,14 @@ SIDE_GROUPS = [
 
 @app.route("/")
 def index():
-    offsets = {str(ch): servos.get_offset(ch) for ch in range(8)}
-    return render_template_string(PAGE, legs=LEGS_ORDER, groups=SIDE_GROUPS, offsets=offsets)
+    startups = {str(ch): servos.get_startup(ch) for ch in range(8)}
+    return render_template_string(PAGE, legs=LEGS_ORDER, groups=SIDE_GROUPS, startups=startups)
 
 
 @app.route("/set", methods=["POST"])
 def set_angle():
     data = request.get_json()
     servos.set_channel(int(data["channel"]), int(data["angle"]))
-    return "", 204
-
-
-@app.route("/center", methods=["POST"])
-def center():
-    data = request.get_json()
-    servos.center_channel(int(data["channel"]))
     return "", 204
 
 
@@ -191,13 +194,19 @@ def release():
     return "", 204
 
 
-@app.route("/set_zero", methods=["POST"])
-def set_zero():
+@app.route("/save_startup", methods=["POST"])
+def save_startup():
     data = request.get_json()
     channel = int(data["channel"])
-    target = int(data.get("target", 90))
-    servos.calibrate_here(channel, target)
-    return {"offset": servos.get_offset(channel)}
+    angle = int(data["angle"])
+    servos.save_startup(channel, angle)
+    return {"startup": servos.get_startup(channel)}
+
+
+@app.route("/reset_all", methods=["POST"])
+def reset_all():
+    servos.reset_all()
+    return "", 204
 
 
 if __name__ == "__main__":
