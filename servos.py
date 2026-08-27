@@ -16,7 +16,6 @@ if os.path.exists(CONFIG_PATH):
 current_physical = {}
 
 for _ch in range(8):
-    kit.servo[_ch].set_pulse_width_range(500, 2500)
     physical = max(0, min(180, 90 + offsets[str(_ch)]))
     kit.servo[_ch].angle = physical
     current_physical[str(_ch)] = physical
