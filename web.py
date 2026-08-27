@@ -28,6 +28,14 @@ PAGE = """
   .leg { margin-bottom:1.4rem; }
   .leg h2 { font-size:1rem; color:#9c9486; margin:0 0 0.5rem; text-transform:uppercase; letter-spacing:0.05em; }
   .offset { font-size:0.8rem; color:#9c9486; margin-top:0.3rem; font-variant-numeric:tabular-nums; }
+  .side-group { margin-bottom:1.6rem; padding:1rem 1.1rem; border:1px solid #2c313a;
+                border-radius:10px; background:#161a20; }
+  .side-group h2 { font-size:1.15rem; margin:0 0 0.9rem; }
+  .servo-group { margin-bottom:0.9rem; }
+  .servo-group:last-child { margin-bottom:0; }
+  .servo-group h3 { font-size:0.8rem; color:#9c9486; text-transform:uppercase;
+                     letter-spacing:0.05em; margin:0 0 0.4rem; font-weight:600; }
+  .divider { border:none; border-top:1px solid #2c313a; margin:1.8rem 0; }
 </style>
 </head>
 <body>
@@ -36,6 +44,30 @@ PAGE = """
     <button class="primary" onclick="allCenter()">All &rarr; 90&deg;</button>
     <button class="danger" onclick="allRelease()">Release All</button>
   </div>
+  {% for group in groups %}
+  <div class="side-group">
+    <h2>{{ group.side }}</h2>
+    <div class="servo-group">
+      <h3>Main Servos</h3>
+      <div class="row">
+        <input type="range" min="0" max="180" value="90" id="group_{{ group.id }}_main"
+               oninput="groupSlide([{{ group.main|join(',') }}], this.value, 'group_{{ group.id }}_main_val')">
+        <span class="val" id="group_{{ group.id }}_main_val">90</span>
+      </div>
+    </div>
+    <div class="servo-group">
+      <h3>Joint Servos</h3>
+      <div class="row">
+        <input type="range" min="0" max="180" value="90" id="group_{{ group.id }}_joint"
+               oninput="groupSlide([{{ group.joint|join(',') }}], this.value, 'group_{{ group.id }}_joint_val')">
+        <span class="val" id="group_{{ group.id }}_joint_val">90</span>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+  <hr class="divider">
+
   {% for leg in legs %}
   <div class="leg">
     <h2>{{ leg.name }}</h2>
@@ -70,6 +102,15 @@ async function post(url, body) {
 function onSlide(ch, angle) {
   document.getElementById("val" + ch).textContent = angle;
   post("/set", {channel: ch, angle: parseInt(angle)});
+}
+
+function groupSlide(channels, angle, valId) {
+  document.getElementById(valId).textContent = angle;
+  channels.forEach(function(ch) {
+    document.getElementById("slider" + ch).value = angle;
+    document.getElementById("val" + ch).textContent = angle;
+    post("/set", {channel: ch, angle: parseInt(angle)});
+  });
 }
 
 function center(ch) {
@@ -114,11 +155,16 @@ LEGS_ORDER = [
     {"name": "Back Left", "hip": 6, "knee": 7},
 ]
 
+SIDE_GROUPS = [
+    {"id": "right", "side": "Right Side", "main": [0, 2], "joint": [1, 3]},
+    {"id": "left", "side": "Left Side", "main": [4, 6], "joint": [5, 7]},
+]
+
 
 @app.route("/")
 def index():
     offsets = {str(ch): servos.get_offset(ch) for ch in range(8)}
-    return render_template_string(PAGE, legs=LEGS_ORDER, offsets=offsets)
+    return render_template_string(PAGE, legs=LEGS_ORDER, groups=SIDE_GROUPS, offsets=offsets)
 
 
 @app.route("/set", methods=["POST"])
