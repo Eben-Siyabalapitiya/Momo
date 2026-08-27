@@ -41,10 +41,23 @@ PAGE = """
 <body>
   <h1>Momo &middot; Servo Panel</h1>
   <div class="topbar">
-    <button class="primary" onclick="allCenter()">All &rarr; 90&deg;</button>
+    <button class="primary" onclick="assembleAll()">Assemble Pose</button>
+    <button class="primary" onclick="saveAllStartup()">Save All as Startup</button>
     <button class="danger" onclick="allRelease()">Release All</button>
     <button class="danger" onclick="resetAll()">Reset All</button>
   </div>
+
+  <div class="side-group">
+    <h2>All Driver Servos</h2>
+    <div class="servo-group">
+      <div class="row">
+        <input type="range" min="0" max="180" value="90" id="group_all_main"
+               oninput="groupSlide([0,2,4,6], this.value, 'group_all_main_val')">
+        <span class="val" id="group_all_main_val">90</span>
+      </div>
+    </div>
+  </div>
+
   {% for group in groups %}
   <div class="side-group">
     <h2>{{ group.side }}</h2>
@@ -82,7 +95,6 @@ PAGE = """
       </div>
       <div class="startup" id="startup{{ joint[1] }}">startup: {{ startups[joint[1]|string] }}&deg;</div>
       <div class="btns">
-        <button onclick="jump({{ joint[1] }}, 0)">0&deg;</button>
         <button onclick="jump({{ joint[1] }}, 90)">90&deg;</button>
         <button onclick="jump({{ joint[1] }}, 180)">180&deg;</button>
         <button onclick="release({{ joint[1] }})">Release</button>
@@ -139,8 +151,18 @@ async function saveStartup(ch) {
   document.getElementById("startup" + ch).textContent = "startup: " + data.startup + "°";
 }
 
-function allCenter() {
-  for (let ch = 0; ch < 8; ch++) jump(ch, 90);
+function assembleAll() {
+  for (let ch = 0; ch < 8; ch++) {
+    const text = document.getElementById("startup" + ch).textContent;
+    const angle = parseInt(text.replace(/[^0-9]/g, ""));
+    jump(ch, angle);
+  }
+}
+
+async function saveAllStartup() {
+  for (let ch = 0; ch < 8; ch++) {
+    await saveStartup(ch);
+  }
 }
 
 function allRelease() {
