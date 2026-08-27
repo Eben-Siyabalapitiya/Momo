@@ -1,7 +1,10 @@
+import threading
 from flask import Flask, request, render_template_string
 import servos
+import gait
 
 app = Flask(__name__)
+gait_lock = threading.Lock()
 
 PAGE = """
 <!doctype html>
@@ -45,6 +48,7 @@ PAGE = """
     <button class="primary" onclick="saveAllStartup()">Save All as Startup</button>
     <button class="danger" onclick="allRelease()">Release All</button>
     <button class="danger" onclick="resetAll()">Reset All</button>
+    <button class="primary" onclick="walkForward()" id="walkBtn">Walk Forward (x3)</button>
   </div>
 
   <div class="side-group">
@@ -185,6 +189,15 @@ function allRelease() {
   for (let ch = 0; ch < 8; ch++) release(ch);
 }
 
+async function walkForward() {
+  const btn = document.getElementById("walkBtn");
+  btn.disabled = true;
+  btn.textContent = "Walking...";
+  await post("/walk", {});
+  btn.disabled = false;
+  btn.textContent = "Walk Forward (x3)";
+}
+
 async function resetAll() {
   await post("/reset_all", {});
   for (let ch = 0; ch < 8; ch++) {
@@ -252,6 +265,17 @@ def save_startup():
 @app.route("/reset_all", methods=["POST"])
 def reset_all():
     servos.reset_all()
+    return "", 204
+
+
+@app.route("/walk", methods=["POST"])
+def walk():
+    if not gait_lock.acquire(blocking=False):
+        return "", 409
+    try:
+        gait.walk_forward(3)
+    finally:
+        gait_lock.release()
     return "", 204
 
 
