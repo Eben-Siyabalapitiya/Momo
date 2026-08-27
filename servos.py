@@ -70,5 +70,6 @@ def set(leg, joint, angle):
     cfg = LEGS[leg]
     channel = cfg[joint]
     sign = cfg["sign"]
-    physical = 90 + sign * (angle - 90)
+    home = startup_angles[str(channel)]
+    physical = home + sign * (angle - 90)
     set_channel(channel, physical)
