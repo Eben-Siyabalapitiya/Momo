@@ -29,9 +29,6 @@ def _power_stroke():
     for leg in LEG_ORDER:
         servos.set(leg, "hip", 90 - POWER_SWING)
     time.sleep(STEP_DELAY * 2)
-    for leg in LEG_ORDER:
-        servos.set(leg, "hip", 90)
-    time.sleep(STEP_DELAY)
 
 
 def walk_forward(cycles=1):
