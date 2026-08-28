@@ -59,17 +59,17 @@ def release_all(channels=range(8)):
 
 
 LEGS = {
-    "FR": {"hip": 0, "knee": 1, "sign": 1},
-    "BR": {"hip": 2, "knee": 3, "sign": -1},
-    "FL": {"hip": 4, "knee": 5, "sign": -1},
-    "BL": {"hip": 6, "knee": 7, "sign": 1},
+    "FR": {"hip": 0, "knee": 1, "hip_sign": -1, "knee_sign": 1},
+    "BR": {"hip": 2, "knee": 3, "hip_sign": -1, "knee_sign": -1},
+    "FL": {"hip": 4, "knee": 5, "hip_sign": 1, "knee_sign": -1},
+    "BL": {"hip": 6, "knee": 7, "hip_sign": 1, "knee_sign": 1},
 }
 
 
 def set(leg, joint, angle):
     cfg = LEGS[leg]
     channel = cfg[joint]
-    sign = cfg["sign"]
+    sign = cfg[joint + "_sign"]
     home = startup_angles[str(channel)]
     physical = home + sign * (angle - 90)
     set_channel(channel, physical)
