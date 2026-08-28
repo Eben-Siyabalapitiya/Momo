@@ -2,7 +2,8 @@ import time
 import servos
 
 HIP_SWING = 50
-KNEE_LIFT = 40
+POWER_SWING = 75
+KNEE_LIFT = 60
 KNEE_STANCE = 0
 STEP_DELAY = 0.18
 
@@ -26,7 +27,7 @@ def _step_leg(leg):
 
 def _power_stroke():
     for leg in LEG_ORDER:
-        servos.set(leg, "hip", 90 - HIP_SWING)
+        servos.set(leg, "hip", 90 - POWER_SWING)
     time.sleep(STEP_DELAY * 2)
     for leg in LEG_ORDER:
         servos.set(leg, "hip", 90)
