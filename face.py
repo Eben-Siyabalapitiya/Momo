@@ -149,7 +149,7 @@ def render(name, **kwargs):
     img = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(img)
     FACES.get(name, face_neutral)(d, **kwargs)
-    _disp.image(img, rotation=90)
+    _disp.image(img, rotation=270)
 
 
 def blink():
