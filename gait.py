@@ -7,6 +7,12 @@ KNEE_LIFT = 60
 KNEE_STANCE = 0
 STEP_DELAY = 0.18
 
+WAVE_KNEE_LIFT = 90
+WAVE_BACK_DIP = 30
+WAVE_HIP_SWING = 40
+WAVE_REPS = 3
+WAVE_STEP_DELAY = 0.15
+
 LEG_ORDER = ["FR", "BL", "FL", "BR"]
 
 
@@ -37,6 +43,25 @@ def walk_forward(cycles=1):
         for leg in LEG_ORDER:
             _step_leg(leg)
         _power_stroke()
+
+
+def wave():
+    servos.set("FR", "knee", KNEE_STANCE + WAVE_KNEE_LIFT)
+    time.sleep(STEP_DELAY)
+    servos.set("BR", "knee", KNEE_STANCE + WAVE_BACK_DIP)
+    servos.set("BL", "knee", KNEE_STANCE + WAVE_BACK_DIP)
+    time.sleep(STEP_DELAY)
+    for _ in range(WAVE_REPS):
+        servos.set("FR", "hip", 90 + WAVE_HIP_SWING)
+        time.sleep(WAVE_STEP_DELAY)
+        servos.set("FR", "hip", 90 - WAVE_HIP_SWING)
+        time.sleep(WAVE_STEP_DELAY)
+    servos.set("FR", "hip", 90)
+    time.sleep(STEP_DELAY)
+    servos.set("FR", "knee", KNEE_STANCE)
+    servos.set("BR", "knee", KNEE_STANCE)
+    servos.set("BL", "knee", KNEE_STANCE)
+    time.sleep(STEP_DELAY)
 
 
 if __name__ == "__main__":
