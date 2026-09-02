@@ -95,14 +95,11 @@ def ask_gemini(text):
 def speak(text):
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as raw_file:
         raw_path = raw_file.name
-    pitched_path = raw_path.replace(".wav", "_pitched.wav")
 
-    subprocess.run(["espeak", "-w", raw_path, text])
-    subprocess.run(["sox", raw_path, pitched_path, "pitch", "400"])
-    subprocess.run(["aplay", "-D", "plughw:0,0", pitched_path])
+    subprocess.run(["espeak", "-p", "75", "-s", "165", "-w", raw_path, text])
+    subprocess.run(["aplay", "-D", "plughw:0,0", raw_path])
 
     os.remove(raw_path)
-    os.remove(pitched_path)
 
 
 def handle_turn(text):
