@@ -306,12 +306,15 @@ def set_volume():
 
 @app.route("/test_voice", methods=["POST"])
 def test_voice():
-    amplitude = str(voice_settings.get_amplitude())
+    settings = voice_settings.load()
     subprocess.run([
-        "espeak", "-v", "en+f3", "-p", "68", "-s", "155", "-a", amplitude,
+        "espeak", "-v", "en+f3",
+        "-p", str(settings["pitch"]),
+        "-s", str(settings["speed"]),
+        "-a", str(settings["amplitude"]),
         "-w", "/tmp/web_voice_test.wav", "Hi, I'm Momo!"
     ])
-    subprocess.run(["aplay", "-D", "plughw:0,0", "/tmp/web_voice_test.wav"])
+    subprocess.run(["aplay", "-D", "plughw:0,0", "--buffer-time=500000", "/tmp/web_voice_test.wav"])
     return "", 204
 
 

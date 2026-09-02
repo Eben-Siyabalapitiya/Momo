@@ -97,10 +97,16 @@ def speak(text):
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as raw_file:
         raw_path = raw_file.name
 
-    amplitude = str(voice_settings.get_amplitude())
-    subprocess.run(["espeak", "-v", "en+f3", "-p", "68", "-s", "155", "-a", amplitude, "-w", raw_path, text])
+    settings = voice_settings.load()
+    subprocess.run([
+        "espeak", "-v", "en+f3",
+        "-p", str(settings["pitch"]),
+        "-s", str(settings["speed"]),
+        "-a", str(settings["amplitude"]),
+        "-w", raw_path, text
+    ])
     face.start_talking()
-    subprocess.run(["aplay", "-D", "plughw:0,0", raw_path])
+    subprocess.run(["aplay", "-D", "plughw:0,0", "--buffer-time=500000", raw_path])
     face.stop_talking()
 
     os.remove(raw_path)

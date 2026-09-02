@@ -168,9 +168,16 @@ def render(name, talking=False, mouth_open=False, **kwargs):
 
 def set_current(name):
     global current_face
-    if name in FACES:
-        current_face = name
-        render(name)
+    if name not in FACES or name == current_face:
+        return
+    old_name = current_face
+    if old_name != "sleepy" and name != "sleepy":
+        render(old_name, blink=1.0)
+        time.sleep(0.08)
+    current_face = name
+    render(name, blink=1.0 if old_name != "sleepy" else 0.0)
+    time.sleep(0.05)
+    render(name, blink=0.0)
 
 
 def blink(name=None):
@@ -210,7 +217,7 @@ def _talk_loop():
         except Exception:
             pass
         mouth_open = not mouth_open
-        time.sleep(0.14)
+        time.sleep(0.32)
 
 
 def start_talking():
