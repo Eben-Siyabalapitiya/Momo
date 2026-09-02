@@ -10,7 +10,7 @@ import face
 load_dotenv()
 
 GEMINI_KEY = os.getenv("GEMINI_KEY")
-GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key={GEMINI_KEY}"
+GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key={GEMINI_KEY}"
 
 MEMORY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "memory.json")
 MAX_HISTORY = 8
