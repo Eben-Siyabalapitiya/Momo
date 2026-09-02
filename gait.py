@@ -7,7 +7,7 @@ KNEE_LIFT = 60
 STEP_DELAY = 0.18
 
 WAVE_LEG = "FL"
-WAVE_BACK_DIP = 70
+WAVE_BACK_DIP = 63
 WAVE_HIP_SWING = 40
 WAVE_REPS = 5
 WAVE_STEP_DELAY = 0.15
@@ -35,6 +35,13 @@ BACK_LEGS = ["BR", "BL"]
 
 def _reach_target(home):
     return 0 if home >= 90 else 180
+
+
+def _settle():
+    for leg in servos.LEGS:
+        servos.set_channel(servos.LEGS[leg]["hip"], 90)
+        knee_ch = servos.LEGS[leg]["knee"]
+        servos.set_channel(knee_ch, servos.get_startup(knee_ch))
 
 
 def stand_tall():
@@ -119,6 +126,7 @@ def walk_trot(cycles=1):
     for _ in range(cycles):
         _trot_phase(DIAGONAL_A, DIAGONAL_B)
         _trot_phase(DIAGONAL_B, DIAGONAL_A)
+    _settle()
 
 
 RIGHT_PAIR = ["FR", "BR"]
@@ -160,6 +168,7 @@ def turn(direction, cycles=TURN_CYCLES):
         _turn_pull_pair(RIGHT_PAIR, direction)
         _turn_swing_pair(LEFT_PAIR, direction)
         _turn_pull_pair(LEFT_PAIR, direction)
+    _settle()
 
 
 def turn_right(cycles=TURN_CYCLES):
@@ -168,6 +177,40 @@ def turn_right(cycles=TURN_CYCLES):
 
 def turn_left(cycles=TURN_CYCLES):
     turn(-1, cycles)
+
+
+def _turn_step_leg_old(leg, direction):
+    knee_ch = servos.LEGS[leg]["knee"]
+    knee_home = servos.get_startup(knee_ch)
+    servos.set_channel(knee_ch, _dip_target(knee_home, KNEE_LIFT))
+    time.sleep(STEP_DELAY)
+    servos.set(leg, "hip", 90 + direction * TURN_SIDE[leg] * HIP_SWING)
+    time.sleep(STEP_DELAY)
+    servos.set_channel(knee_ch, knee_home)
+    time.sleep(STEP_DELAY)
+
+
+def _turn_power_stroke_old(direction):
+    for leg in LEG_ORDER:
+        servos.set(leg, "hip", 90 - direction * TURN_SIDE[leg] * POWER_SWING)
+    time.sleep(STEP_DELAY * 2)
+
+
+def turn_old(direction, cycles=TURN_CYCLES):
+    stand_tall()
+    for _ in range(cycles):
+        for leg in LEG_ORDER:
+            _turn_step_leg_old(leg, direction)
+        _turn_power_stroke_old(direction)
+    _settle()
+
+
+def turn_right_old(cycles=TURN_CYCLES):
+    turn_old(1, cycles)
+
+
+def turn_left_old(cycles=TURN_CYCLES):
+    turn_old(-1, cycles)
 
 
 def wave():
