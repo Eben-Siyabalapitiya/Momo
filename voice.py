@@ -9,6 +9,7 @@ import board
 import digitalio
 from dotenv import load_dotenv
 import face
+import gait
 import voice_settings
 import persona
 
@@ -28,6 +29,8 @@ VALID_FACES = {
     "neutral", "happy", "sad", "annoyed", "confused",
     "sleepy", "excited", "curious", "smug"
 }
+
+VALID_ACTIONS = {"none", "wave", "walk", "turn_left", "turn_right"}
 
 history = []
 facts = []
@@ -82,15 +85,18 @@ def ask_gemini(text):
                 raw = raw[4:]
         data = json.loads(raw)
     except (requests.RequestException, KeyError, IndexError, json.JSONDecodeError):
-        data = {"say": "I got a bit tangled in my own thoughts.", "face": "confused", "remember": None}
+        data = {"say": "I got a bit tangled in my own thoughts.", "face": "confused", "action": "none", "remember": None}
 
     say = data.get("say", "...")
     face_name = data.get("face", "neutral")
     if face_name not in VALID_FACES:
         face_name = "neutral"
+    action = data.get("action", "none")
+    if action not in VALID_ACTIONS:
+        action = "none"
     remember = data.get("remember")
 
-    return say, face_name, remember
+    return say, face_name, action, remember
 
 
 def speak(text):
@@ -116,10 +122,25 @@ def speak(text):
         os.remove(raw_path)
 
 
+def perform_action(action):
+    try:
+        if action == "wave":
+            gait.wave()
+        elif action == "walk":
+            gait.walk_trot(1)
+        elif action == "turn_left":
+            gait.turn_left_old(1)
+        elif action == "turn_right":
+            gait.turn_right_old(1)
+    except Exception:
+        pass
+
+
 def handle_turn(text):
-    say, face_name, remember = ask_gemini(text)
+    say, face_name, action, remember = ask_gemini(text)
     face.set_current(face_name)
     speak(say)
+    perform_action(action)
     history.append({"user": text, "momo": say})
     if len(history) > MAX_HISTORY:
         del history[0]
