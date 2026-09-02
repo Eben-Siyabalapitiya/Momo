@@ -64,6 +64,19 @@ PAGE = """
   button.btn.primary { background: var(--accent); color: #06110f; border: none; }
   button.btn.danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
 
+  .dpad { display: grid; grid-template-columns: repeat(3, 4.4rem); grid-template-rows: repeat(3, 4.4rem);
+          gap: 0.5rem; justify-content: center; margin: 0.4rem auto 0; }
+  .dpad-btn { background: var(--panel-2); border: 1px solid var(--border); border-radius: 16px;
+              color: var(--text); font-size: 1.3rem; display: flex; align-items: center; justify-content: center;
+              cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+  .dpad-btn:active { background: var(--accent-dim); border-color: var(--accent); }
+  .dpad-up { grid-column: 2; grid-row: 1; }
+  .dpad-left { grid-column: 1; grid-row: 2; }
+  .dpad-center { grid-column: 2; grid-row: 2; font-size: 0.7rem; font-weight: 600;
+                 background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+  .dpad-right { grid-column: 3; grid-row: 2; }
+  .dpad-down { grid-column: 2; grid-row: 3; }
+
   .row { display: flex; align-items: center; gap: 0.8rem; }
   .row label { width: 5.5rem; font-size: 0.85rem; color: var(--muted); }
   input[type=range] { flex: 1; accent-color: var(--accent); }
@@ -102,20 +115,23 @@ PAGE = """
 
   <section id="tab-control" class="active">
     <div class="card">
-      <h2>Movement</h2>
-      <p class="sub">Trigger gaits and gestures.</p>
-      <div class="actions">
-        <button class="btn primary" id="walkBtn" onclick="walkForward()">Walk Forward &times;3</button>
-        <button class="btn" id="turnLeftBtn" onclick="turn('left')">Turn Left</button>
-        <button class="btn" id="turnRightBtn" onclick="turn('right')">Turn Right</button>
-        <button class="btn" onclick="goHome()">Home</button>
+      <h2>Move</h2>
+      <p class="sub">Each press runs 2 step cycles.</p>
+      <div class="dpad">
+        <button class="dpad-btn dpad-up" id="dpadUp" onclick="move('forward')">&#9650;</button>
+        <button class="dpad-btn dpad-left" id="dpadLeft" onclick="move('left')">&#9664;</button>
+        <button class="dpad-btn dpad-center" onclick="goHome()">Home</button>
+        <button class="dpad-btn dpad-right" id="dpadRight" onclick="move('right')">&#9654;</button>
+        <button class="dpad-btn dpad-down" id="dpadDown" onclick="move('backward')">&#9660;</button>
+      </div>
+      <div class="actions" style="margin-top:1.1rem;">
         <button class="btn" id="waveBtn" onclick="wave()">Wave</button>
       </div>
     </div>
 
     <div class="card">
       <h2>Voice</h2>
-      <p class="sub">Playback volume and a quick test line.</p>
+      <p class="sub">Playback volume and a quick test line. Applies live, no restart needed.</p>
       <div class="row">
         <label>Volume</label>
         <input type="range" min="0" max="200" value="{{ volume }}" id="volumeSlider" oninput="onVolume(this.value)">
@@ -300,26 +316,18 @@ function allRelease() {
   for (let ch = 0; ch < 8; ch++) release(ch);
 }
 
-async function walkForward() {
-  const btn = document.getElementById("walkBtn");
+const MOVE_ROUTES = {forward: "/walk", backward: "/walk_back", left: "/turn_left", right: "/turn_right"};
+const MOVE_BTNS = {forward: "dpadUp", backward: "dpadDown", left: "dpadLeft", right: "dpadRight"};
+
+async function move(dir) {
+  const btn = document.getElementById(MOVE_BTNS[dir]);
   btn.disabled = true;
-  btn.textContent = "Walking...";
-  await post("/walk", {});
+  await post(MOVE_ROUTES[dir], {});
   btn.disabled = false;
-  btn.textContent = "Walk Forward ×3";
 }
 
 function goHome() {
   post("/home", {});
-}
-
-async function turn(dir) {
-  const btn = document.getElementById(dir === "left" ? "turnLeftBtn" : "turnRightBtn");
-  btn.disabled = true;
-  btn.textContent = "Turning...";
-  await post("/turn_" + dir, {});
-  btn.disabled = false;
-  btn.textContent = dir === "left" ? "Turn Left" : "Turn Right";
 }
 
 async function turnOld(dir) {
@@ -529,7 +537,18 @@ def walk():
     if not gait_lock.acquire(blocking=False):
         return "", 409
     try:
-        gait.walk_trot(3)
+        gait.walk_trot(2)
+    finally:
+        gait_lock.release()
+    return "", 204
+
+
+@app.route("/walk_back", methods=["POST"])
+def walk_back():
+    if not gait_lock.acquire(blocking=False):
+        return "", 409
+    try:
+        gait.walk_backward(2)
     finally:
         gait_lock.release()
     return "", 204
