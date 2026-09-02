@@ -71,7 +71,7 @@ def init():
         cs=cs_pin,
         dc=dc_pin,
         rst=reset_pin,
-        baudrate=24000000,
+        baudrate=8000000,
         width=128,
         height=160,
         x_offset=2,
@@ -238,7 +238,7 @@ def _animate_loop():
             set_current(random.choice(choices))
             next_mood_gap = random.uniform(6.0, 12.0)
 
-        time.sleep(0.1)
+        time.sleep(0.15)
 
 
 def start_idle():
