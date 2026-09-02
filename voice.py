@@ -47,15 +47,8 @@ def save_memory():
         json.dump({"history": history, "facts": facts}, f, indent=2)
 
 
-def listen():
-    face.start_talking()
-    try:
-        recognizer = sr.Recognizer()
-        with sr.Microphone() as source:
-            recognizer.adjust_for_ambient_noise(source, duration=0.5)
-            audio = recognizer.listen(source, phrase_time_limit=8)
-    finally:
-        face.stop_talking()
+def listen(recognizer, source):
+    audio = recognizer.listen(source, phrase_time_limit=8)
     try:
         return recognizer.recognize_google(audio)
     except sr.UnknownValueError:
@@ -134,18 +127,21 @@ def run():
     face.init()
     face.set_current("curious")
     face.start_idle()
-    try:
-        while True:
-            text = listen()
-            if not text:
-                continue
-            print("heard:", text)
-            say, face_name = handle_turn(text)
-            print("momo:", say, "|", face_name)
-    except KeyboardInterrupt:
-        pass
-    finally:
-        save_memory()
+    recognizer = sr.Recognizer()
+    with sr.Microphone() as source:
+        recognizer.adjust_for_ambient_noise(source, duration=0.5)
+        try:
+            while True:
+                text = listen(recognizer, source)
+                if not text:
+                    continue
+                print("heard:", text)
+                say, face_name = handle_turn(text)
+                print("momo:", say, "|", face_name)
+        except KeyboardInterrupt:
+            pass
+        finally:
+            save_memory()
 
 
 if __name__ == "__main__":
