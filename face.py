@@ -170,12 +170,21 @@ def _do_blink(kind):
     blink_amt = 0.0
 
 
-IDLE_FACES = ["neutral", "curious", "happy", "confused", "sleepy", "smug",
-              "surprised", "playful", "bored", "shy", "dreamy", "alert"]
+IDLE_BLUE = (70, 160, 255)
+IDLE_PINK = (230, 130, 190)
+IDLE_RED = (220, 70, 70)
+IDLE_COLOR_CHOICES = [IDLE_BLUE, IDLE_BLUE, IDLE_BLUE, IDLE_BLUE, IDLE_PINK, IDLE_RED]
+
+IDLE_SHAPES = [
+    {"w": 62, "h": 64},
+    {"w": 58, "h": 60},
+    {"w": 60, "h": 20, "lid": "angry"},
+    {"w": 60, "h": 56, "r_dw": -14, "r_dh": -30, "r_lid": "heavy"},
+]
 
 
 def _animate_loop():
-    global cur, _running
+    global cur, _running, lid_L, lid_R
     _running = True
     last_blink = time.time()
     next_blink_gap = random.uniform(2.0, 4.5)
@@ -185,15 +194,25 @@ def _animate_loop():
     next_micro_gap = random.uniform(3.0, 6.0)
     last_mood = time.time()
     next_mood_gap = random.uniform(6.0, 11.0)
+    last_color = time.time()
+    next_color_gap = random.uniform(25.0, 45.0)
+    was_speaking = False
 
     while True:
         try:
             if _speaking:
+                was_speaking = True
                 time.sleep(0.1)
                 last_blink = time.time()
                 last_wander = time.time()
                 last_mood = time.time()
                 continue
+
+            if was_speaking:
+                was_speaking = False
+                tgt["r"], tgt["g"], tgt["b"] = IDLE_BLUE
+                last_color = time.time()
+                next_color_gap = random.uniform(25.0, 45.0)
 
             now = time.time()
             settling = now < _settle_until
@@ -215,23 +234,33 @@ def _animate_loop():
                 last_wander = now
                 amp = 10 if not settling else 5
                 tgt["ox"] = random.uniform(-amp, amp)
-                tgt["oy"] = random.uniform(-amp * 0.5, amp * 0.5)
+                tgt["oy"] = random.uniform(-amp * 0.9, amp * 0.9)
                 next_wander_gap = random.uniform(1.8, 4.0)
                 threading.Timer(random.uniform(0.8, 1.6), lambda: tgt.update(ox=0.0, oy=0.0)).start()
 
             if now - last_micro > next_micro_gap:
                 last_micro = now
-                base = EXPR[current_face]
+                base_h = tgt["h"]
                 jitter = random.uniform(-4, 4)
-                tgt["h"] = base["h"] + jitter
+                tgt["h"] = base_h + jitter
                 next_micro_gap = random.uniform(3.5, 7.0)
-                threading.Timer(random.uniform(1.0, 2.0), lambda: tgt.update(h=base["h"])).start()
+                threading.Timer(random.uniform(1.0, 2.0), lambda: tgt.update(h=base_h)).start()
 
             if now - last_mood > next_mood_gap:
                 last_mood = now
-                choices = [f for f in IDLE_FACES if f != current_face]
-                set_current(random.choice(choices))
+                shape = random.choice(IDLE_SHAPES)
+                tgt["w"] = shape["w"]
+                tgt["h"] = shape["h"]
+                tgt["r_dw"] = shape.get("r_dw", 0)
+                tgt["r_dh"] = shape.get("r_dh", 0)
+                lid_L = shape.get("lid")
+                lid_R = shape.get("r_lid", shape.get("lid"))
                 next_mood_gap = random.uniform(6.0, 12.0)
+
+            if now - last_color > next_color_gap:
+                last_color = now
+                tgt["r"], tgt["g"], tgt["b"] = random.choice(IDLE_COLOR_CHOICES)
+                next_color_gap = random.uniform(25.0, 45.0)
 
             time.sleep(0.05)
         except Exception:
