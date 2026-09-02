@@ -144,10 +144,10 @@ PAGE = """
 
     <div class="card">
       <h2>Testing</h2>
-      <p class="sub">Old one-leg-at-a-time turning, for comparison against the current paired version.</p>
+      <p class="sub">Newer paired turning, for comparison against the one-leg-at-a-time version used above.</p>
       <div class="actions">
-        <button class="btn" id="turnLeftOldBtn" onclick="turnOld('left')">Turn Left (Old)</button>
-        <button class="btn" id="turnRightOldBtn" onclick="turnOld('right')">Turn Right (Old)</button>
+        <button class="btn" id="turnLeftNewBtn" onclick="turnNew('left')">Turn Left (New)</button>
+        <button class="btn" id="turnRightNewBtn" onclick="turnNew('right')">Turn Right (New)</button>
       </div>
     </div>
   </section>
@@ -316,7 +316,7 @@ function allRelease() {
   for (let ch = 0; ch < 8; ch++) release(ch);
 }
 
-const MOVE_ROUTES = {forward: "/walk", backward: "/walk_back", left: "/turn_left", right: "/turn_right"};
+const MOVE_ROUTES = {forward: "/walk", backward: "/walk_back", left: "/turn_left_old", right: "/turn_right_old"};
 const MOVE_BTNS = {forward: "dpadUp", backward: "dpadDown", left: "dpadLeft", right: "dpadRight"};
 
 async function move(dir) {
@@ -330,13 +330,13 @@ function goHome() {
   post("/home", {});
 }
 
-async function turnOld(dir) {
-  const btn = document.getElementById(dir === "left" ? "turnLeftOldBtn" : "turnRightOldBtn");
+async function turnNew(dir) {
+  const btn = document.getElementById(dir === "left" ? "turnLeftNewBtn" : "turnRightNewBtn");
   btn.disabled = true;
   btn.textContent = "Turning...";
-  await post("/turn_" + dir + "_old", {});
+  await post("/turn_" + dir, {});
   btn.disabled = false;
-  btn.textContent = dir === "left" ? "Turn Left (Old)" : "Turn Right (Old)";
+  btn.textContent = dir === "left" ? "Turn Left (New)" : "Turn Right (New)";
 }
 
 async function wave() {
