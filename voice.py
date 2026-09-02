@@ -99,7 +99,7 @@ def speak(text):
 
     subprocess.run(["espeak", "-w", raw_path, text])
     subprocess.run(["sox", raw_path, pitched_path, "pitch", "400"])
-    subprocess.run(["aplay", pitched_path])
+    subprocess.run(["aplay", "-D", "plughw:0,0", pitched_path])
 
     os.remove(raw_path)
     os.remove(pitched_path)
