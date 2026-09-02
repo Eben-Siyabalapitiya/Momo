@@ -2,6 +2,7 @@
 config.json
 memory.json
 voice_settings.json
+persona.json
 __pycache__/
 *.pyc
 .venv/
