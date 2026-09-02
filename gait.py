@@ -7,10 +7,11 @@ KNEE_LIFT = 60
 KNEE_STANCE = 0
 STEP_DELAY = 0.18
 
-WAVE_KNEE_LIFT = 90
-WAVE_BACK_DIP = 30
+WAVE_KNEE_HIGH = 180
+WAVE_KNEE_LOW = 150
+WAVE_BACK_DIP = 70
 WAVE_HIP_SWING = 40
-WAVE_REPS = 3
+WAVE_REPS = 5
 WAVE_STEP_DELAY = 0.15
 
 LEG_ORDER = ["FR", "BL", "FL", "BR"]
@@ -46,21 +47,31 @@ def walk_forward(cycles=1):
 
 
 def wave():
-    servos.set("FR", "knee", KNEE_STANCE + WAVE_KNEE_LIFT)
+    fr_knee = servos.LEGS["FR"]["knee"]
+    br_knee = servos.LEGS["BR"]["knee"]
+    bl_knee = servos.LEGS["BL"]["knee"]
+    fr_knee_home = servos.get_startup(fr_knee)
+    br_knee_home = servos.get_startup(br_knee)
+    bl_knee_home = servos.get_startup(bl_knee)
+
+    servos.set_channel(fr_knee, WAVE_KNEE_HIGH)
     time.sleep(STEP_DELAY)
-    servos.set("BR", "knee", KNEE_STANCE + WAVE_BACK_DIP)
-    servos.set("BL", "knee", KNEE_STANCE + WAVE_BACK_DIP)
+    servos.set_channel(br_knee, max(0, br_knee_home - WAVE_BACK_DIP))
+    servos.set_channel(bl_knee, min(180, bl_knee_home + WAVE_BACK_DIP))
     time.sleep(STEP_DELAY)
+
     for _ in range(WAVE_REPS):
-        servos.set("FR", "hip", 90 + WAVE_HIP_SWING)
-        time.sleep(WAVE_STEP_DELAY)
+        servos.set_channel(fr_knee, WAVE_KNEE_LOW)
         servos.set("FR", "hip", 90 - WAVE_HIP_SWING)
         time.sleep(WAVE_STEP_DELAY)
+        servos.set_channel(fr_knee, WAVE_KNEE_HIGH)
+        servos.set("FR", "hip", 90 + WAVE_HIP_SWING)
+        time.sleep(WAVE_STEP_DELAY)
+
     servos.set("FR", "hip", 90)
-    time.sleep(STEP_DELAY)
-    servos.set("FR", "knee", KNEE_STANCE)
-    servos.set("BR", "knee", KNEE_STANCE)
-    servos.set("BL", "knee", KNEE_STANCE)
+    servos.set_channel(fr_knee, fr_knee_home)
+    servos.set_channel(br_knee, br_knee_home)
+    servos.set_channel(bl_knee, bl_knee_home)
     time.sleep(STEP_DELAY)
 
 
