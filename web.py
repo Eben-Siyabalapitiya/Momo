@@ -107,7 +107,7 @@ PAGE = """
       <div class="actions">
         <button class="btn primary" id="walkBtn" onclick="walkForward()">Walk Forward &times;3</button>
         <button class="btn" onclick="goHome()">Home</button>
-        <button class="btn" disabled title="Coming soon">Wave</button>
+        <button class="btn" id="waveBtn" onclick="wave()">Wave</button>
       </div>
     </div>
 
@@ -302,6 +302,15 @@ function goHome() {
   post("/home", {});
 }
 
+async function wave() {
+  const btn = document.getElementById("waveBtn");
+  btn.disabled = true;
+  btn.textContent = "Waving...";
+  await post("/wave", {});
+  btn.disabled = false;
+  btn.textContent = "Wave";
+}
+
 function onVolume(value) {
   document.getElementById("volumeVal").textContent = value;
   throttled("volume", function() {
@@ -428,6 +437,17 @@ def save_persona():
 def home():
     for ch in range(8):
         servos.set_channel(ch, servos.get_startup(ch))
+    return "", 204
+
+
+@app.route("/wave", methods=["POST"])
+def wave_route():
+    if not gait_lock.acquire(blocking=False):
+        return "", 409
+    try:
+        gait.wave()
+    finally:
+        gait_lock.release()
     return "", 204
 
 
