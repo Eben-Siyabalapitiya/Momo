@@ -125,6 +125,15 @@ PAGE = """
         <button class="btn" onclick="testVoice()">Test Voice</button>
       </div>
     </div>
+
+    <div class="card">
+      <h2>Testing</h2>
+      <p class="sub">Old one-leg-at-a-time turning, for comparison against the current paired version.</p>
+      <div class="actions">
+        <button class="btn" id="turnLeftOldBtn" onclick="turnOld('left')">Turn Left (Old)</button>
+        <button class="btn" id="turnRightOldBtn" onclick="turnOld('right')">Turn Right (Old)</button>
+      </div>
+    </div>
   </section>
 
   <section id="tab-personality">
@@ -313,6 +322,15 @@ async function turn(dir) {
   btn.textContent = dir === "left" ? "Turn Left" : "Turn Right";
 }
 
+async function turnOld(dir) {
+  const btn = document.getElementById(dir === "left" ? "turnLeftOldBtn" : "turnRightOldBtn");
+  btn.disabled = true;
+  btn.textContent = "Turning...";
+  await post("/turn_" + dir + "_old", {});
+  btn.disabled = false;
+  btn.textContent = dir === "left" ? "Turn Left (Old)" : "Turn Right (Old)";
+}
+
 async function wave() {
   const btn = document.getElementById("waveBtn");
   btn.disabled = true;
@@ -479,6 +497,28 @@ def turn_right_route():
         return "", 409
     try:
         gait.turn_right()
+    finally:
+        gait_lock.release()
+    return "", 204
+
+
+@app.route("/turn_left_old", methods=["POST"])
+def turn_left_old_route():
+    if not gait_lock.acquire(blocking=False):
+        return "", 409
+    try:
+        gait.turn_left_old()
+    finally:
+        gait_lock.release()
+    return "", 204
+
+
+@app.route("/turn_right_old", methods=["POST"])
+def turn_right_old_route():
+    if not gait_lock.acquire(blocking=False):
+        return "", 409
+    try:
+        gait.turn_right_old()
     finally:
         gait_lock.release()
     return "", 204
