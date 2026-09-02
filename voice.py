@@ -96,7 +96,7 @@ def speak(text):
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as raw_file:
         raw_path = raw_file.name
 
-    subprocess.run(["espeak", "-v", "en+f3", "-p", "68", "-s", "155", "-a", "140", "-w", raw_path, text])
+    subprocess.run(["espeak", "-v", "en+f3", "-p", "68", "-s", "155", "-a", "90", "-w", raw_path, text])
     face.start_talking()
     subprocess.run(["aplay", "-D", "plughw:0,0", raw_path])
     face.stop_talking()
