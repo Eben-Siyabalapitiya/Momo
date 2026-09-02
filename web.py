@@ -106,6 +106,7 @@ PAGE = """
       <p class="sub">Trigger gaits and gestures.</p>
       <div class="actions">
         <button class="btn primary" id="walkBtn" onclick="walkForward()">Walk Forward &times;3</button>
+        <button class="btn" onclick="goHome()">Home</button>
         <button class="btn" disabled title="Coming soon">Wave</button>
       </div>
     </div>
@@ -297,6 +298,10 @@ async function walkForward() {
   btn.textContent = "Walk Forward ×3";
 }
 
+function goHome() {
+  post("/home", {});
+}
+
 function onVolume(value) {
   document.getElementById("volumeVal").textContent = value;
   throttled("volume", function() {
@@ -416,6 +421,13 @@ def test_voice():
 def save_persona():
     data = request.get_json()
     persona.save(data["prompt"])
+    return "", 204
+
+
+@app.route("/home", methods=["POST"])
+def home():
+    for ch in range(8):
+        servos.set_channel(ch, servos.get_startup(ch))
     return "", 204
 
 
