@@ -238,7 +238,7 @@ def _animate_loop():
             set_current(random.choice(choices))
             next_mood_gap = random.uniform(6.0, 12.0)
 
-        time.sleep(0.07)
+        time.sleep(0.1)
 
 
 def start_idle():

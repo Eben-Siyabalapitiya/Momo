@@ -48,10 +48,14 @@ def save_memory():
 
 
 def listen():
-    recognizer = sr.Recognizer()
-    with sr.Microphone() as source:
-        recognizer.adjust_for_ambient_noise(source, duration=0.5)
-        audio = recognizer.listen(source, phrase_time_limit=8)
+    face.start_talking()
+    try:
+        recognizer = sr.Recognizer()
+        with sr.Microphone() as source:
+            recognizer.adjust_for_ambient_noise(source, duration=0.5)
+            audio = recognizer.listen(source, phrase_time_limit=8)
+    finally:
+        face.stop_talking()
     try:
         return recognizer.recognize_google(audio)
     except sr.UnknownValueError:
