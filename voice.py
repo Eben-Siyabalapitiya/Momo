@@ -96,7 +96,7 @@ def speak(text):
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as raw_file:
         raw_path = raw_file.name
 
-    subprocess.run(["espeak", "-v", "en+f3", "-p", "70", "-s", "155", "-a", "180", "-w", raw_path, text])
+    subprocess.run(["espeak", "-v", "en+f4", "-p", "82", "-s", "150", "-a", "190", "-w", raw_path, text])
     subprocess.run(["aplay", "-D", "plughw:0,0", raw_path])
 
     os.remove(raw_path)
@@ -104,7 +104,7 @@ def speak(text):
 
 def handle_turn(text):
     say, face_name, remember = ask_gemini(text)
-    face.render(face_name)
+    face.set_current(face_name)
     speak(say)
     history.append({"user": text, "momo": say})
     if len(history) > MAX_HISTORY:
@@ -118,7 +118,8 @@ def handle_turn(text):
 def run():
     load_memory()
     face.init()
-    face.render("curious")
+    face.set_current("curious")
+    face.start_idle()
     try:
         while True:
             text = listen()

@@ -1,4 +1,6 @@
 import time
+import random
+import threading
 import board
 import digitalio
 from PIL import Image, ImageDraw, ImageFont
@@ -8,6 +10,8 @@ W, H = 160, 128
 BG = (8, 14, 36)
 
 _disp = None
+current_face = "neutral"
+_idle_started = False
 
 
 def init():
@@ -45,8 +49,8 @@ def _lid_top(draw, box, frac):
     draw.rectangle([x0, y0, x1, y0 + (y1 - y0) * frac], fill=BG)
 
 
-def _eye(draw, cx, cy, w, h, color, lid=None, pupil_dx=0, sparkle=False):
-    h = max(h, 4)
+def _eye(draw, cx, cy, w, h, color, lid=None, pupil_dx=0, sparkle=False, blink=0.0):
+    h = max(4, h * (1 - blink))
     box = [cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2]
     radius = min(w, h) * 0.42
     draw.rounded_rectangle(box, radius=radius, fill=color)
@@ -60,74 +64,78 @@ def _eye(draw, cx, cy, w, h, color, lid=None, pupil_dx=0, sparkle=False):
         _cut_corner(draw, box, "tl")
     elif lid == "heavy":
         _lid_top(draw, box, 0.45)
-    if pupil_dx or sparkle:
+    if (pupil_dx or sparkle) and blink < 0.7:
         pr = min(w, h) * 0.18
         pcx = cx + pupil_dx
         pcy = cy + h * 0.08
         draw.ellipse([pcx - pr, pcy - pr, pcx + pr, pcy + pr], fill=(25, 30, 45))
-    if sparkle:
+    if sparkle and blink < 0.7:
         sr = min(w, h) * 0.09
         scx = cx - w * 0.16
         scy = cy - h * 0.2
         draw.ellipse([scx - sr, scy - sr, scx + sr, scy + sr], fill=(255, 255, 255))
 
 
+EYE_L = 38
+EYE_R = 122
+CY = 46
+
+
 def face_neutral(d, blink=0.0):
-    h = max(4, 40 * (1 - blink))
-    _eye(d, 54, 50, 44, h, (80, 220, 235))
-    _eye(d, 106, 50, 44, h, (80, 220, 235))
-    d.line([65, 100, 95, 100], fill=(210, 220, 230), width=4)
+    _eye(d, EYE_L, CY, 52, 48, (80, 220, 235), blink=blink)
+    _eye(d, EYE_R, CY, 52, 48, (80, 220, 235), blink=blink)
+    d.line([58, 104, 102, 104], fill=(210, 220, 230), width=5)
 
 
-def face_happy(d):
-    _eye(d, 54, 50, 44, 24, (90, 230, 150))
-    _eye(d, 106, 50, 44, 24, (90, 230, 150))
-    d.arc([60, 86, 100, 114], start=20, end=160, fill=(210, 230, 220), width=5)
+def face_happy(d, blink=0.0):
+    _eye(d, EYE_L, CY, 52, 30, (90, 230, 150), blink=blink)
+    _eye(d, EYE_R, CY, 52, 30, (90, 230, 150), blink=blink)
+    d.arc([52, 88, 108, 122], start=20, end=160, fill=(210, 230, 220), width=6)
 
 
-def face_sad(d):
-    _eye(d, 54, 52, 42, 34, (120, 170, 230), lid="sad_l")
-    _eye(d, 106, 52, 42, 34, (120, 170, 230), lid="sad_r")
-    d.arc([62, 100, 98, 122], start=200, end=340, fill=(150, 180, 225), width=4)
+def face_sad(d, blink=0.0):
+    _eye(d, EYE_L, CY + 2, 50, 40, (120, 170, 230), lid="sad_l", blink=blink)
+    _eye(d, EYE_R, CY + 2, 50, 40, (120, 170, 230), lid="sad_r", blink=blink)
+    d.arc([54, 100, 106, 126], start=200, end=340, fill=(150, 180, 225), width=5)
 
 
-def face_annoyed(d):
-    _eye(d, 54, 50, 46, 16, (235, 100, 60), lid="angry_l")
-    _eye(d, 106, 50, 46, 16, (235, 100, 60), lid="angry_r")
-    d.line([68, 100, 92, 100], fill=(235, 120, 90), width=4)
+def face_annoyed(d, blink=0.0):
+    _eye(d, EYE_L, CY, 54, 20, (235, 100, 60), lid="angry_l", blink=blink)
+    _eye(d, EYE_R, CY, 54, 20, (235, 100, 60), lid="angry_r", blink=blink)
+    d.line([60, 104, 100, 104], fill=(235, 120, 90), width=5)
 
 
-def face_confused(d):
-    _eye(d, 54, 48, 40, 36, (100, 210, 230))
-    _eye(d, 106, 52, 40, 22, (140, 220, 235), lid="sad_r")
-    d.line([(64, 100), (72, 94), (80, 100), (88, 94), (96, 100)], fill=(210, 220, 230), width=3)
+def face_confused(d, blink=0.0):
+    _eye(d, EYE_L, CY - 2, 46, 42, (100, 210, 230), blink=blink)
+    _eye(d, EYE_R, CY + 2, 46, 26, (140, 220, 235), lid="sad_r", blink=blink)
+    d.line([(56, 104), (66, 96), (78, 104), (90, 96), (102, 104)], fill=(210, 220, 230), width=4)
 
 
-def face_sleepy(d):
-    _eye(d, 54, 50, 44, 8, (150, 180, 220))
-    _eye(d, 106, 50, 44, 8, (150, 180, 220))
-    d.ellipse([76, 98, 86, 108], outline=(150, 180, 220), width=3)
+def face_sleepy(d, blink=0.0):
+    _eye(d, EYE_L, CY, 52, 10, (150, 180, 220), blink=0.0)
+    _eye(d, EYE_R, CY, 52, 10, (150, 180, 220), blink=0.0)
+    d.ellipse([70, 100, 90, 118], outline=(150, 180, 220), width=4)
     font = ImageFont.load_default()
-    d.text((122, 6), "Z", fill=(150, 180, 220), font=font)
-    d.text((132, 16), "z", fill=(150, 180, 220), font=font)
+    d.text((128, 4), "Z", fill=(150, 180, 220), font=font)
+    d.text((140, 16), "z", fill=(150, 180, 220), font=font)
 
 
-def face_excited(d):
-    _eye(d, 54, 48, 52, 52, (255, 210, 60), sparkle=True)
-    _eye(d, 106, 48, 52, 52, (255, 210, 60), sparkle=True)
-    d.ellipse([64, 90, 96, 118], fill=(235, 90, 90))
+def face_excited(d, blink=0.0):
+    _eye(d, EYE_L, CY - 2, 58, 58, (255, 210, 60), sparkle=True, blink=blink)
+    _eye(d, EYE_R, CY - 2, 58, 58, (255, 210, 60), sparkle=True, blink=blink)
+    d.ellipse([58, 94, 102, 126], fill=(235, 90, 90))
 
 
-def face_curious(d):
-    _eye(d, 54, 50, 46, 46, (110, 220, 235), pupil_dx=8)
-    _eye(d, 106, 48, 50, 44, (110, 220, 235), pupil_dx=8)
-    d.ellipse([74, 96, 88, 110], outline=(210, 220, 230), width=3)
+def face_curious(d, blink=0.0):
+    _eye(d, EYE_L, CY, 52, 52, (110, 220, 235), pupil_dx=10, blink=blink)
+    _eye(d, EYE_R, CY - 2, 56, 50, (110, 220, 235), pupil_dx=10, blink=blink)
+    d.ellipse([68, 100, 92, 118], outline=(210, 220, 230), width=4)
 
 
-def face_smug(d):
-    _eye(d, 54, 50, 44, 36, (130, 220, 200))
-    _eye(d, 106, 54, 44, 20, (130, 220, 200), lid="heavy")
-    d.arc([58, 92, 102, 112], start=20, end=90, fill=(230, 210, 120), width=5)
+def face_smug(d, blink=0.0):
+    _eye(d, EYE_L, CY, 50, 40, (130, 220, 200), blink=blink)
+    _eye(d, EYE_R, CY + 4, 50, 22, (130, 220, 200), lid="heavy", blink=blink)
+    d.arc([52, 96, 108, 120], start=20, end=90, fill=(230, 210, 120), width=6)
 
 
 FACES = {
@@ -152,16 +160,44 @@ def render(name, **kwargs):
     _disp.image(img, rotation=270)
 
 
-def blink():
-    render("neutral", blink=0.0)
+def set_current(name):
+    global current_face
+    if name in FACES:
+        current_face = name
+        render(name)
+
+
+def blink(name=None):
+    name = name or current_face
+    if name == "sleepy":
+        return
+    render(name, blink=0.0)
     time.sleep(0.05)
-    render("neutral", blink=0.6)
+    render(name, blink=0.6)
     time.sleep(0.04)
-    render("neutral", blink=1.0)
+    render(name, blink=1.0)
     time.sleep(0.06)
-    render("neutral", blink=0.6)
+    render(name, blink=0.6)
     time.sleep(0.04)
-    render("neutral", blink=0.0)
+    render(name, blink=0.0)
+
+
+def _idle_loop():
+    while True:
+        time.sleep(random.uniform(2.5, 5.5))
+        try:
+            blink()
+        except Exception:
+            pass
+
+
+def start_idle():
+    global _idle_started
+    if _idle_started:
+        return
+    _idle_started = True
+    t = threading.Thread(target=_idle_loop, daemon=True)
+    t.start()
 
 
 if __name__ == "__main__":
@@ -171,6 +207,6 @@ if __name__ == "__main__":
         render(name)
         time.sleep(1.6)
     print("blink")
-    blink()
+    blink("neutral")
     time.sleep(0.5)
     render("neutral")
