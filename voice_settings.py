@@ -3,7 +3,7 @@ import os
 
 SETTINGS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "voice_settings.json")
 
-DEFAULTS = {"amplitude": 50, "pitch": 80, "speed": 150}
+DEFAULTS = {"amplitude": 80, "pitch": 80, "speed": 150}
 
 
 def load():
