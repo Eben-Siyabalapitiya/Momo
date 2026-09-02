@@ -27,7 +27,8 @@ MAX_HISTORY = 8
 
 VALID_FACES = {
     "neutral", "happy", "sad", "annoyed", "confused",
-    "sleepy", "excited", "curious", "smug"
+    "sleepy", "excited", "curious", "smug",
+    "surprised", "playful", "bored", "shy", "dreamy", "alert"
 }
 
 VALID_ACTIONS = {"none", "wave", "walk", "turn_left", "turn_right"}
