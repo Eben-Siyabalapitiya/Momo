@@ -33,11 +33,21 @@ EXPR = {
                  "r_dw": 8, "r_dh": 4},
     "smug":     {"w": 58, "h": 44, "color": (130, 220, 200), "lid": None,
                  "r_dw": 0, "r_dh": -20, "r_lid": "heavy"},
+    "surprised": {"w": 72, "h": 74, "color": (235, 220, 255), "lid": None},
+    "playful":  {"w": 62, "h": 58, "color": (140, 230, 190), "lid": None,
+                 "r_dw": 4, "r_dh": -30, "r_lid": "heavy"},
+    "bored":    {"w": 60, "h": 20, "color": (140, 160, 190), "lid": "heavy"},
+    "shy":      {"w": 50, "h": 44, "color": (230, 170, 200), "lid": "sad",
+                 "r_dw": -2, "r_dh": -2, "r_lid": "sad"},
+    "dreamy":   {"w": 56, "h": 30, "color": (180, 190, 255), "lid": None},
+    "alert":    {"w": 66, "h": 66, "color": (150, 235, 235), "lid": None},
 }
 
 ENERGY = {
-    "excited": 1.0, "annoyed": 0.8, "happy": 0.5, "curious": 0.5,
-    "neutral": 0.3, "confused": 0.4, "smug": 0.3, "sad": 0.15, "sleepy": 0.05,
+    "excited": 1.0, "annoyed": 0.8, "surprised": 0.9, "alert": 0.85,
+    "happy": 0.5, "curious": 0.5, "playful": 0.6,
+    "neutral": 0.3, "confused": 0.4, "smug": 0.3, "bored": 0.2,
+    "shy": 0.25, "sad": 0.15, "dreamy": 0.15, "sleepy": 0.05,
 }
 
 cur = {"w": 60.0, "h": 62.0, "r": 80.0, "g": 220.0, "b": 235.0,
@@ -64,8 +74,8 @@ def init():
         baudrate=24000000,
         width=128,
         height=160,
-        x_offset=0,
-        y_offset=0,
+        x_offset=2,
+        y_offset=1,
     )
     return _disp
 
@@ -160,21 +170,28 @@ def _do_blink(kind):
     blink_amt = 0.0
 
 
+IDLE_FACES = ["neutral", "curious", "happy", "confused", "sleepy", "smug",
+              "surprised", "playful", "bored", "shy", "dreamy", "alert"]
+
+
 def _animate_loop():
     global cur, _running
     _running = True
     last_blink = time.time()
     next_blink_gap = random.uniform(2.0, 4.5)
     last_wander = time.time()
-    next_wander_gap = random.uniform(2.5, 5.0)
+    next_wander_gap = random.uniform(1.8, 3.5)
     last_micro = time.time()
     next_micro_gap = random.uniform(3.0, 6.0)
+    last_mood = time.time()
+    next_mood_gap = random.uniform(6.0, 11.0)
 
     while True:
         if _speaking:
             time.sleep(0.1)
             last_blink = time.time()
             last_wander = time.time()
+            last_mood = time.time()
             continue
 
         now = time.time()
@@ -214,6 +231,12 @@ def _animate_loop():
             tgt["h"] = base["h"] + jitter
             next_micro_gap = random.uniform(3.5, 7.0)
             threading.Timer(random.uniform(1.0, 2.0), lambda: tgt.update(h=base["h"])).start()
+
+        if now - last_mood > next_mood_gap:
+            last_mood = now
+            choices = [f for f in IDLE_FACES if f != current_face]
+            set_current(random.choice(choices))
+            next_mood_gap = random.uniform(6.0, 12.0)
 
         time.sleep(0.07)
 
