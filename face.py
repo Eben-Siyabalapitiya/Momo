@@ -187,58 +187,55 @@ def _animate_loop():
     next_mood_gap = random.uniform(6.0, 11.0)
 
     while True:
-        if _speaking:
-            time.sleep(0.1)
-            last_blink = time.time()
-            last_wander = time.time()
-            last_mood = time.time()
-            continue
-
-        now = time.time()
-        settling = now < _settle_until
-        ease = 0.22 if not settling else 0.12
-
-        for k in ("w", "h", "r", "g", "b", "r_dw", "r_dh", "ox", "oy"):
-            cur[k] += (tgt[k] - cur[k]) * ease
-
         try:
+            if _speaking:
+                time.sleep(0.1)
+                last_blink = time.time()
+                last_wander = time.time()
+                last_mood = time.time()
+                continue
+
+            now = time.time()
+            settling = now < _settle_until
+            ease = 0.22 if not settling else 0.12
+
+            for k in ("w", "h", "r", "g", "b", "r_dw", "r_dh", "ox", "oy"):
+                cur[k] += (tgt[k] - cur[k]) * ease
+
             _frame()
-        except Exception:
-            pass
 
-        if now - last_blink > next_blink_gap:
-            last_blink = now
-            roll = random.random()
-            kind = "quick" if roll < 0.55 else ("slow" if roll < 0.85 else "double")
-            try:
+            if now - last_blink > next_blink_gap:
+                last_blink = now
+                roll = random.random()
+                kind = "quick" if roll < 0.55 else ("slow" if roll < 0.85 else "double")
                 _do_blink(kind)
-            except Exception:
-                pass
-            next_blink_gap = random.uniform(2.0, 5.5)
+                next_blink_gap = random.uniform(2.0, 5.5)
 
-        if now - last_wander > next_wander_gap:
-            last_wander = now
-            amp = 10 if not settling else 5
-            tgt["ox"] = random.uniform(-amp, amp)
-            tgt["oy"] = random.uniform(-amp * 0.5, amp * 0.5)
-            next_wander_gap = random.uniform(1.8, 4.0)
-            threading.Timer(random.uniform(0.8, 1.6), lambda: tgt.update(ox=0.0, oy=0.0)).start()
+            if now - last_wander > next_wander_gap:
+                last_wander = now
+                amp = 10 if not settling else 5
+                tgt["ox"] = random.uniform(-amp, amp)
+                tgt["oy"] = random.uniform(-amp * 0.5, amp * 0.5)
+                next_wander_gap = random.uniform(1.8, 4.0)
+                threading.Timer(random.uniform(0.8, 1.6), lambda: tgt.update(ox=0.0, oy=0.0)).start()
 
-        if now - last_micro > next_micro_gap:
-            last_micro = now
-            base = EXPR[current_face]
-            jitter = random.uniform(-4, 4)
-            tgt["h"] = base["h"] + jitter
-            next_micro_gap = random.uniform(3.5, 7.0)
-            threading.Timer(random.uniform(1.0, 2.0), lambda: tgt.update(h=base["h"])).start()
+            if now - last_micro > next_micro_gap:
+                last_micro = now
+                base = EXPR[current_face]
+                jitter = random.uniform(-4, 4)
+                tgt["h"] = base["h"] + jitter
+                next_micro_gap = random.uniform(3.5, 7.0)
+                threading.Timer(random.uniform(1.0, 2.0), lambda: tgt.update(h=base["h"])).start()
 
-        if now - last_mood > next_mood_gap:
-            last_mood = now
-            choices = [f for f in IDLE_FACES if f != current_face]
-            set_current(random.choice(choices))
-            next_mood_gap = random.uniform(6.0, 12.0)
+            if now - last_mood > next_mood_gap:
+                last_mood = now
+                choices = [f for f in IDLE_FACES if f != current_face]
+                set_current(random.choice(choices))
+                next_mood_gap = random.uniform(6.0, 12.0)
 
-        time.sleep(0.05)
+            time.sleep(0.05)
+        except Exception:
+            time.sleep(0.05)
 
 
 def start_idle():
