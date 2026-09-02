@@ -10,6 +10,7 @@ import digitalio
 from dotenv import load_dotenv
 import face
 import voice_settings
+import persona
 
 amp_enable = digitalio.DigitalInOut(board.D26)
 amp_enable.direction = digitalio.Direction.OUTPUT
@@ -27,14 +28,6 @@ VALID_FACES = {
     "neutral", "happy", "sad", "annoyed", "confused",
     "sleepy", "excited", "curious", "smug"
 }
-
-SYSTEM_PROMPT = """You are Momo, a small four-legged robot spider. You are curious, a bit dramatic, and fond of your owner. You know you cannot climb walls. Keep replies under 15 words.
-
-Respond with ONLY raw JSON, no markdown, no code fences, in exactly this shape:
-{"say": "your reply here", "face": "one of neutral, happy, sad, annoyed, confused, sleepy, excited, curious, smug", "remember": "a short fact worth remembering long term, or null if nothing new"}
-
-Only fill "remember" when the owner shares something worth keeping, like their name, a preference, or a detail about their life or this build. Otherwise leave it null. Keep facts short, one sentence.
-"""
 
 history = []
 facts = []
@@ -68,7 +61,7 @@ def listen():
 
 
 def ask_gemini(text):
-    convo = SYSTEM_PROMPT + "\n\n"
+    convo = persona.load() + "\n\n"
     if facts:
         convo += "Things you already know about your owner:\n"
         for fact in facts:
