@@ -2,11 +2,18 @@ import json
 import os
 import subprocess
 import tempfile
+import time
 import requests
 import speech_recognition as sr
+import board
+import digitalio
 from dotenv import load_dotenv
 import face
 import voice_settings
+
+amp_enable = digitalio.DigitalInOut(board.D26)
+amp_enable.direction = digitalio.Direction.OUTPUT
+amp_enable.value = False
 
 load_dotenv()
 
@@ -99,14 +106,17 @@ def speak(text):
 
     settings = voice_settings.load()
     subprocess.run([
-        "espeak", "-v", "en+f3",
+        "espeak", "-v", "en+m7",
         "-p", str(settings["pitch"]),
         "-s", str(settings["speed"]),
         "-a", str(settings["amplitude"]),
         "-w", raw_path, text
     ])
     face.start_talking()
+    amp_enable.value = True
+    time.sleep(0.03)
     subprocess.run(["aplay", "-D", "plughw:0,0", "--buffer-time=500000", raw_path])
+    amp_enable.value = False
     face.stop_talking()
 
     os.remove(raw_path)
