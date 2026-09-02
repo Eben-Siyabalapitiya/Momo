@@ -106,6 +106,8 @@ PAGE = """
       <p class="sub">Trigger gaits and gestures.</p>
       <div class="actions">
         <button class="btn primary" id="walkBtn" onclick="walkForward()">Walk Forward &times;3</button>
+        <button class="btn" id="turnLeftBtn" onclick="turn('left')">Turn Left</button>
+        <button class="btn" id="turnRightBtn" onclick="turn('right')">Turn Right</button>
         <button class="btn" onclick="goHome()">Home</button>
         <button class="btn" id="waveBtn" onclick="wave()">Wave</button>
       </div>
@@ -302,6 +304,15 @@ function goHome() {
   post("/home", {});
 }
 
+async function turn(dir) {
+  const btn = document.getElementById(dir === "left" ? "turnLeftBtn" : "turnRightBtn");
+  btn.disabled = true;
+  btn.textContent = "Turning...";
+  await post("/turn_" + dir, {});
+  btn.disabled = false;
+  btn.textContent = dir === "left" ? "Turn Left" : "Turn Right";
+}
+
 async function wave() {
   const btn = document.getElementById("waveBtn");
   btn.disabled = true;
@@ -451,12 +462,34 @@ def wave_route():
     return "", 204
 
 
+@app.route("/turn_left", methods=["POST"])
+def turn_left_route():
+    if not gait_lock.acquire(blocking=False):
+        return "", 409
+    try:
+        gait.turn_left()
+    finally:
+        gait_lock.release()
+    return "", 204
+
+
+@app.route("/turn_right", methods=["POST"])
+def turn_right_route():
+    if not gait_lock.acquire(blocking=False):
+        return "", 409
+    try:
+        gait.turn_right()
+    finally:
+        gait_lock.release()
+    return "", 204
+
+
 @app.route("/walk", methods=["POST"])
 def walk():
     if not gait_lock.acquire(blocking=False):
         return "", 409
     try:
-        gait.walk_forward(3)
+        gait.walk_trot(3)
     finally:
         gait_lock.release()
     return "", 204
