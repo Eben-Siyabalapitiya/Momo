@@ -6,6 +6,7 @@ import requests
 import speech_recognition as sr
 from dotenv import load_dotenv
 import face
+import voice_settings
 
 load_dotenv()
 
@@ -96,7 +97,8 @@ def speak(text):
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as raw_file:
         raw_path = raw_file.name
 
-    subprocess.run(["espeak", "-v", "en+f3", "-p", "68", "-s", "155", "-a", "60", "-w", raw_path, text])
+    amplitude = str(voice_settings.get_amplitude())
+    subprocess.run(["espeak", "-v", "en+f3", "-p", "68", "-s", "155", "-a", amplitude, "-w", raw_path, text])
     face.start_talking()
     subprocess.run(["aplay", "-D", "plughw:0,0", raw_path])
     face.stop_talking()

@@ -1,7 +1,9 @@
 import threading
+import subprocess
 from flask import Flask, request, render_template_string
 import servos
 import gait
+import voice_settings
 
 app = Flask(__name__)
 gait_lock = threading.Lock()
@@ -49,6 +51,21 @@ PAGE = """
     <button class="danger" onclick="allRelease()">Release All</button>
     <button class="danger" onclick="resetAll()">Reset All</button>
     <button class="primary" onclick="walkForward()" id="walkBtn">Walk Forward (x3)</button>
+  </div>
+
+  <div class="side-group">
+    <h2>Voice</h2>
+    <div class="servo-group">
+      <h3>Volume</h3>
+      <div class="row">
+        <input type="range" min="0" max="200" value="{{ volume }}" id="volumeSlider"
+               oninput="onVolume(this.value)">
+        <span class="val" id="volumeVal">{{ volume }}</span>
+      </div>
+    </div>
+    <div class="btns">
+      <button class="primary" onclick="testVoice()">Test Voice</button>
+    </div>
   </div>
 
   <div class="side-group">
@@ -198,6 +215,17 @@ async function walkForward() {
   btn.textContent = "Walk Forward (x3)";
 }
 
+function onVolume(value) {
+  document.getElementById("volumeVal").textContent = value;
+  throttled("volume", function() {
+    post("/set_volume", {amplitude: parseInt(value)});
+  });
+}
+
+function testVoice() {
+  post("/test_voice", {});
+}
+
 async function resetAll() {
   await post("/reset_all", {});
   for (let ch = 0; ch < 8; ch++) {
@@ -228,7 +256,8 @@ SIDE_GROUPS = [
 @app.route("/")
 def index():
     startups = {str(ch): servos.get_startup(ch) for ch in range(8)}
-    return render_template_string(PAGE, legs=LEGS_ORDER, groups=SIDE_GROUPS, startups=startups)
+    volume = voice_settings.get_amplitude()
+    return render_template_string(PAGE, legs=LEGS_ORDER, groups=SIDE_GROUPS, startups=startups, volume=volume)
 
 
 @app.route("/set", methods=["POST"])
@@ -265,6 +294,24 @@ def save_startup():
 @app.route("/reset_all", methods=["POST"])
 def reset_all():
     servos.reset_all()
+    return "", 204
+
+
+@app.route("/set_volume", methods=["POST"])
+def set_volume():
+    data = request.get_json()
+    voice_settings.set_amplitude(int(data["amplitude"]))
+    return "", 204
+
+
+@app.route("/test_voice", methods=["POST"])
+def test_voice():
+    amplitude = str(voice_settings.get_amplitude())
+    subprocess.run([
+        "espeak", "-v", "en+f3", "-p", "68", "-s", "155", "-a", amplitude,
+        "-w", "/tmp/web_voice_test.wav", "Hi, I'm Momo!"
+    ])
+    subprocess.run(["aplay", "-D", "plughw:0,0", "/tmp/web_voice_test.wav"])
     return "", 204
 
 

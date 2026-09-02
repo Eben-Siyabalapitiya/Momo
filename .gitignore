@@ -1,6 +1,7 @@
 .env
 config.json
 memory.json
+voice_settings.json
 __pycache__/
 *.pyc
 .venv/
