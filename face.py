@@ -50,7 +50,7 @@ def _lid_top(draw, box, frac):
     draw.rectangle([x0, y0, x1, y0 + (y1 - y0) * frac], fill=BG)
 
 
-def _eye(draw, cx, cy, w, h, color, lid=None, pupil_dx=0, sparkle=False, blink=0.0):
+def _eye(draw, cx, cy, w, h, color, lid=None, sparkle=False, blink=0.0):
     h = max(4, h * (1 - blink))
     box = [cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2]
     radius = min(w, h) * 0.28
@@ -65,15 +65,10 @@ def _eye(draw, cx, cy, w, h, color, lid=None, pupil_dx=0, sparkle=False, blink=0
         _cut_corner(draw, box, "tl")
     elif lid == "heavy":
         _lid_top(draw, box, 0.45)
-    if (pupil_dx or sparkle) and blink < 0.7:
-        pr = min(w, h) * 0.18
-        pcx = cx + pupil_dx
-        pcy = cy + h * 0.08
-        draw.ellipse([pcx - pr, pcy - pr, pcx + pr, pcy + pr], fill=(25, 30, 45))
     if sparkle and blink < 0.7:
-        sr = min(w, h) * 0.09
-        scx = cx - w * 0.16
-        scy = cy - h * 0.2
+        sr = min(w, h) * 0.1
+        scx = cx - w * 0.18
+        scy = cy - h * 0.22
         draw.ellipse([scx - sr, scy - sr, scx + sr, scy + sr], fill=(255, 255, 255))
 
 
@@ -128,8 +123,8 @@ def face_excited(d, blink=0.0):
 
 
 def face_curious(d, blink=0.0):
-    _eye(d, EYE_L, CY, 58, 58, (110, 220, 235), pupil_dx=11, blink=blink)
-    _eye(d, EYE_R, CY - 2, 62, 56, (110, 220, 235), pupil_dx=11, blink=blink)
+    _eye(d, EYE_L, CY, 58, 58, (110, 220, 235), blink=blink)
+    _eye(d, EYE_R, CY - 2, 66, 60, (110, 220, 235), blink=blink)
     d.ellipse([66, 100, 94, 120], outline=(210, 220, 230), width=4)
 
 
@@ -152,18 +147,25 @@ FACES = {
 }
 
 
+_img = None
+_draw = None
+
+
 def render(name, talking=False, mouth_open=False, **kwargs):
+    global _img, _draw
     if _disp is None:
         init()
-    img = Image.new("RGB", (W, H), BG)
-    d = ImageDraw.Draw(img)
-    FACES.get(name, face_neutral)(d, **kwargs)
+    if _img is None:
+        _img = Image.new("RGB", (W, H), BG)
+        _draw = ImageDraw.Draw(_img)
+    _draw.rectangle([0, 0, W, H], fill=BG)
+    FACES.get(name, face_neutral)(_draw, **kwargs)
     if talking:
         if mouth_open:
-            d.ellipse([62, 96, 98, 124], fill=(230, 100, 100))
+            _draw.ellipse([62, 96, 98, 124], fill=(230, 100, 100))
         else:
-            d.line([64, 108, 96, 108], fill=(210, 220, 230), width=5)
-    _disp.image(img, rotation=270)
+            _draw.line([64, 108, 96, 108], fill=(210, 220, 230), width=5)
+    _disp.image(_img, rotation=270)
 
 
 def set_current(name):
@@ -189,13 +191,19 @@ def blink(name=None):
     render(name, blink=0.0)
 
 
+IDLE_FACES = ["neutral", "curious", "happy", "confused", "sleepy", "smug"]
+
+
 def _idle_loop():
     while True:
         time.sleep(random.uniform(2.5, 5.5))
         if _speaking:
             continue
         try:
-            blink()
+            if random.random() < 0.3:
+                set_current(random.choice(IDLE_FACES))
+            else:
+                blink()
         except Exception:
             pass
 
