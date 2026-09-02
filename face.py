@@ -1,6 +1,7 @@
 import time
 import random
 import threading
+import numpy
 import board
 import digitalio
 from PIL import Image, ImageDraw
@@ -76,6 +77,7 @@ def init():
         height=160,
         x_offset=2,
         y_offset=1,
+        bgr=True,
     )
     return _disp
 
@@ -131,7 +133,21 @@ def _frame():
             scy = CY + cur["oy"] - cur["h"] * 0.22
             _draw.ellipse([scx - sr, scy - sr, scx + sr, scy + sr], fill=(255, 255, 255))
 
-    _disp.image(_img, rotation=270)
+    _push_frame(_img)
+
+
+def _push_frame(img):
+    try:
+        rotated = img.rotate(270, expand=True)
+        data = numpy.asarray(rotated, dtype=numpy.uint16)
+        color = ((data[:, :, 0] & 0xF8) << 8) | ((data[:, :, 1] & 0xFC) << 3) | (data[:, :, 2] >> 3)
+        hi = (color >> 8).astype(numpy.uint8)
+        lo = (color & 0xFF).astype(numpy.uint8)
+        pixels = numpy.dstack((hi, lo)).tobytes()
+        w, h = rotated.size
+        _disp._block(0, 0, w - 1, h - 1, pixels)
+    except Exception:
+        _disp.image(img, rotation=270)
 
 
 def set_current(name):
@@ -262,7 +278,7 @@ def _animate_loop():
                 tgt["r"], tgt["g"], tgt["b"] = random.choice(IDLE_COLOR_CHOICES)
                 next_color_gap = random.uniform(25.0, 45.0)
 
-            time.sleep(0.05)
+            time.sleep(0.02)
         except Exception:
             time.sleep(0.05)
 
