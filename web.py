@@ -308,7 +308,7 @@ def set_volume():
 def test_voice():
     settings = voice_settings.load()
     subprocess.run([
-        "espeak", "-v", "en+f3",
+        "espeak", "-v", "en+m7",
         "-p", str(settings["pitch"]),
         "-s", str(settings["speed"]),
         "-a", str(settings["amplitude"]),
