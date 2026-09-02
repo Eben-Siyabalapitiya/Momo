@@ -3,16 +3,51 @@ import random
 import threading
 import board
 import digitalio
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 from adafruit_rgb_display import st7735
 
 W, H = 160, 128
 BG = (8, 14, 36)
+CY = 64
+EYE_L = 40
+EYE_R = 120
 
 _disp = None
+_img = None
+_draw = None
+
 current_face = "neutral"
-_idle_started = False
+_running = False
 _speaking = False
+
+EXPR = {
+    "neutral":  {"w": 60, "h": 62, "color": (80, 220, 235), "lid": None},
+    "happy":    {"w": 60, "h": 36, "color": (90, 230, 150), "lid": None},
+    "sad":      {"w": 58, "h": 50, "color": (120, 170, 230), "lid": "sad"},
+    "annoyed":  {"w": 62, "h": 24, "color": (235, 100, 60), "lid": "angry"},
+    "confused": {"w": 54, "h": 46, "color": (100, 210, 230), "lid": None,
+                 "r_dw": 0, "r_dh": -16, "r_lid": "sad"},
+    "sleepy":   {"w": 60, "h": 14, "color": (150, 180, 220), "lid": None},
+    "excited":  {"w": 68, "h": 70, "color": (255, 210, 60), "lid": None, "sparkle": True},
+    "curious":  {"w": 60, "h": 62, "color": (110, 220, 235), "lid": None,
+                 "r_dw": 8, "r_dh": 4},
+    "smug":     {"w": 58, "h": 44, "color": (130, 220, 200), "lid": None,
+                 "r_dw": 0, "r_dh": -20, "r_lid": "heavy"},
+}
+
+ENERGY = {
+    "excited": 1.0, "annoyed": 0.8, "happy": 0.5, "curious": 0.5,
+    "neutral": 0.3, "confused": 0.4, "smug": 0.3, "sad": 0.15, "sleepy": 0.05,
+}
+
+cur = {"w": 60.0, "h": 62.0, "r": 80.0, "g": 220.0, "b": 235.0,
+       "r_dw": 0.0, "r_dh": 0.0, "ox": 0.0, "oy": 0.0}
+tgt = dict(cur)
+lid_L = None
+lid_R = None
+sparkle_on = False
+blink_amt = 0.0
+_settle_until = 0.0
 
 
 def init():
@@ -35,7 +70,7 @@ def init():
     return _disp
 
 
-def _cut_corner(draw, box, corner, depth_frac=0.55):
+def _cut_corner(draw, box, corner, depth_frac=0.5):
     x0, y0, x1, y1 = box
     w, h = x1 - x0, y1 - y0
     if corner == "tl":
@@ -50,204 +85,166 @@ def _lid_top(draw, box, frac):
     draw.rectangle([x0, y0, x1, y0 + (y1 - y0) * frac], fill=BG)
 
 
-def _eye(draw, cx, cy, w, h, color, lid=None, sparkle=False, blink=0.0):
-    h = max(4, h * (1 - blink))
+def _draw_eye(draw, cx, cy, w, h, color, lid, left):
+    h = max(3, h)
+    w = max(6, w)
     box = [cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2]
     radius = min(w, h) * 0.28
     draw.rounded_rectangle(box, radius=radius, fill=color)
-    if lid == "sad_l":
-        _cut_corner(draw, box, "tl")
-    elif lid == "sad_r":
-        _cut_corner(draw, box, "tr")
-    elif lid == "angry_l":
-        _cut_corner(draw, box, "tr")
-    elif lid == "angry_r":
-        _cut_corner(draw, box, "tl")
+    if lid == "sad":
+        _cut_corner(draw, box, "tl" if left else "tr")
+    elif lid == "angry":
+        _cut_corner(draw, box, "tr" if left else "tl")
     elif lid == "heavy":
         _lid_top(draw, box, 0.45)
-    if sparkle and blink < 0.7:
-        sr = min(w, h) * 0.1
-        scx = cx - w * 0.18
-        scy = cy - h * 0.22
-        draw.ellipse([scx - sr, scy - sr, scx + sr, scy + sr], fill=(255, 255, 255))
 
 
-EYE_L = 34
-EYE_R = 126
-CY = 44
-
-
-def face_neutral(d, blink=0.0):
-    _eye(d, EYE_L, CY, 58, 56, (80, 220, 235), blink=blink)
-    _eye(d, EYE_R, CY, 58, 56, (80, 220, 235), blink=blink)
-    d.line([56, 106, 104, 106], fill=(210, 220, 230), width=5)
-
-
-def face_happy(d, blink=0.0):
-    _eye(d, EYE_L, CY, 58, 34, (90, 230, 150), blink=blink)
-    _eye(d, EYE_R, CY, 58, 34, (90, 230, 150), blink=blink)
-    d.arc([48, 88, 112, 124], start=20, end=160, fill=(210, 230, 220), width=6)
-
-
-def face_sad(d, blink=0.0):
-    _eye(d, EYE_L, CY + 2, 56, 46, (120, 170, 230), lid="sad_l", blink=blink)
-    _eye(d, EYE_R, CY + 2, 56, 46, (120, 170, 230), lid="sad_r", blink=blink)
-    d.arc([52, 100, 108, 127], start=200, end=340, fill=(150, 180, 225), width=5)
-
-
-def face_annoyed(d, blink=0.0):
-    _eye(d, EYE_L, CY, 60, 22, (235, 100, 60), lid="angry_l", blink=blink)
-    _eye(d, EYE_R, CY, 60, 22, (235, 100, 60), lid="angry_r", blink=blink)
-    d.line([58, 106, 102, 106], fill=(235, 120, 90), width=5)
-
-
-def face_confused(d, blink=0.0):
-    _eye(d, EYE_L, CY - 2, 52, 48, (100, 210, 230), blink=blink)
-    _eye(d, EYE_R, CY + 2, 52, 30, (140, 220, 235), lid="sad_r", blink=blink)
-    d.line([(54, 106), (65, 97), (78, 106), (91, 97), (104, 106)], fill=(210, 220, 230), width=4)
-
-
-def face_sleepy(d, blink=0.0):
-    _eye(d, EYE_L, CY, 58, 12, (150, 180, 220), blink=0.0)
-    _eye(d, EYE_R, CY, 58, 12, (150, 180, 220), blink=0.0)
-    d.ellipse([68, 100, 90, 120], outline=(150, 180, 220), width=4)
-    font = ImageFont.load_default()
-    d.text((130, 4), "Z", fill=(150, 180, 220), font=font)
-    d.text((142, 16), "z", fill=(150, 180, 220), font=font)
-
-
-def face_excited(d, blink=0.0):
-    _eye(d, EYE_L, CY - 2, 64, 64, (255, 210, 60), sparkle=True, blink=blink)
-    _eye(d, EYE_R, CY - 2, 64, 64, (255, 210, 60), sparkle=True, blink=blink)
-    d.ellipse([56, 96, 104, 128], fill=(235, 90, 90))
-
-
-def face_curious(d, blink=0.0):
-    _eye(d, EYE_L, CY, 58, 58, (110, 220, 235), blink=blink)
-    _eye(d, EYE_R, CY - 2, 66, 60, (110, 220, 235), blink=blink)
-    d.ellipse([66, 100, 94, 120], outline=(210, 220, 230), width=4)
-
-
-def face_smug(d, blink=0.0):
-    _eye(d, EYE_L, CY, 56, 46, (130, 220, 200), blink=blink)
-    _eye(d, EYE_R, CY + 4, 56, 24, (130, 220, 200), lid="heavy", blink=blink)
-    d.arc([50, 96, 110, 122], start=20, end=90, fill=(230, 210, 120), width=6)
-
-
-FACES = {
-    "neutral": face_neutral,
-    "happy": face_happy,
-    "sad": face_sad,
-    "annoyed": face_annoyed,
-    "confused": face_confused,
-    "sleepy": face_sleepy,
-    "excited": face_excited,
-    "curious": face_curious,
-    "smug": face_smug,
-}
-
-
-_img = None
-_draw = None
-
-
-def render(name, talking=False, mouth_open=False, **kwargs):
+def _frame():
     global _img, _draw
-    if _disp is None:
-        init()
     if _img is None:
         _img = Image.new("RGB", (W, H), BG)
         _draw = ImageDraw.Draw(_img)
     _draw.rectangle([0, 0, W, H], fill=BG)
-    FACES.get(name, face_neutral)(_draw, **kwargs)
-    if talking:
-        if mouth_open:
-            _draw.ellipse([62, 96, 98, 124], fill=(230, 100, 100))
-        else:
-            _draw.line([64, 108, 96, 108], fill=(210, 220, 230), width=5)
+
+    color = (int(cur["r"]), int(cur["g"]), int(cur["b"]))
+    h_l = cur["h"] * (1 - blink_amt)
+    h_r = (cur["h"] + cur["r_dh"]) * (1 - blink_amt)
+    w_r = cur["w"] + cur["r_dw"]
+
+    _draw_eye(_draw, EYE_L + cur["ox"], CY + cur["oy"], cur["w"], h_l, color, lid_L, True)
+    _draw_eye(_draw, EYE_R + cur["ox"], CY + cur["oy"], w_r, h_r, color, lid_R, False)
+
+    if sparkle_on and blink_amt < 0.6:
+        for ex in (EYE_L, EYE_R):
+            sr = min(cur["w"], cur["h"]) * 0.1
+            scx = ex + cur["ox"] - cur["w"] * 0.18
+            scy = CY + cur["oy"] - cur["h"] * 0.22
+            _draw.ellipse([scx - sr, scy - sr, scx + sr, scy + sr], fill=(255, 255, 255))
+
     _disp.image(_img, rotation=270)
 
 
 def set_current(name):
-    global current_face
-    if name not in FACES or name == current_face:
+    global current_face, lid_L, lid_R, sparkle_on, tgt, _settle_until
+    if name not in EXPR:
         return
-    old_name = current_face
-    if old_name != "sleepy" and name != "sleepy":
-        render(old_name, blink=1.0)
-        time.sleep(0.08)
+    prev = current_face
     current_face = name
-    render(name, blink=1.0 if old_name != "sleepy" else 0.0)
-    time.sleep(0.05)
-    render(name, blink=0.0)
+    spec = EXPR[name]
+    tgt = {
+        "w": spec["w"], "h": spec["h"],
+        "r": spec["color"][0], "g": spec["color"][1], "b": spec["color"][2],
+        "r_dw": spec.get("r_dw", 0), "r_dh": spec.get("r_dh", 0),
+        "ox": 0.0, "oy": 0.0,
+    }
+    lid_L = spec.get("lid")
+    lid_R = spec.get("r_lid", spec.get("lid"))
+    sparkle_on = spec.get("sparkle", False)
+    if ENERGY.get(prev, 0.3) > 0.7 and ENERGY.get(name, 0.3) < 0.5:
+        _settle_until = time.time() + random.uniform(3.0, 5.0)
 
 
-def blink(name=None):
-    name = name or current_face
-    if name == "sleepy":
+def _do_blink(kind):
+    global blink_amt
+    if current_face == "sleepy":
         return
-    render(name, blink=1.0)
-    time.sleep(0.09)
-    render(name, blink=0.0)
+    if kind == "quick":
+        steps = [(0.0, 0.02), (1.0, 0.03), (0.0, 0.04)]
+    elif kind == "slow":
+        steps = [(0.0, 0.03), (0.5, 0.05), (1.0, 0.09), (0.5, 0.05), (0.0, 0.07)]
+    else:
+        steps = [(0.0, 0.02), (1.0, 0.03), (0.1, 0.04), (1.0, 0.03), (0.0, 0.05)]
+    for amt, dur in steps:
+        blink_amt = amt
+        time.sleep(dur)
+    blink_amt = 0.0
 
 
-IDLE_FACES = ["neutral", "curious", "happy", "confused", "sleepy", "smug"]
+def _animate_loop():
+    global cur, _running
+    _running = True
+    last_blink = time.time()
+    next_blink_gap = random.uniform(2.0, 4.5)
+    last_wander = time.time()
+    next_wander_gap = random.uniform(2.5, 5.0)
+    last_micro = time.time()
+    next_micro_gap = random.uniform(3.0, 6.0)
 
-
-def _idle_loop():
     while True:
-        time.sleep(random.uniform(2.5, 5.5))
         if _speaking:
+            time.sleep(0.1)
+            last_blink = time.time()
+            last_wander = time.time()
             continue
+
+        now = time.time()
+        settling = now < _settle_until
+        ease = 0.22 if not settling else 0.12
+
+        for k in ("w", "h", "r", "g", "b", "r_dw", "r_dh", "ox", "oy"):
+            cur[k] += (tgt[k] - cur[k]) * ease
+
         try:
-            if random.random() < 0.3:
-                set_current(random.choice(IDLE_FACES))
-            else:
-                blink()
+            _frame()
         except Exception:
             pass
+
+        if now - last_blink > next_blink_gap:
+            last_blink = now
+            roll = random.random()
+            kind = "quick" if roll < 0.55 else ("slow" if roll < 0.85 else "double")
+            try:
+                _do_blink(kind)
+            except Exception:
+                pass
+            next_blink_gap = random.uniform(2.0, 5.5)
+
+        if now - last_wander > next_wander_gap:
+            last_wander = now
+            amp = 10 if not settling else 5
+            tgt["ox"] = random.uniform(-amp, amp)
+            tgt["oy"] = random.uniform(-amp * 0.5, amp * 0.5)
+            next_wander_gap = random.uniform(1.8, 4.0)
+            threading.Timer(random.uniform(0.8, 1.6), lambda: tgt.update(ox=0.0, oy=0.0)).start()
+
+        if now - last_micro > next_micro_gap:
+            last_micro = now
+            base = EXPR[current_face]
+            jitter = random.uniform(-4, 4)
+            tgt["h"] = base["h"] + jitter
+            next_micro_gap = random.uniform(3.5, 7.0)
+            threading.Timer(random.uniform(1.0, 2.0), lambda: tgt.update(h=base["h"])).start()
+
+        time.sleep(0.07)
 
 
 def start_idle():
-    global _idle_started
-    if _idle_started:
+    global _running
+    if _running:
         return
-    _idle_started = True
-    t = threading.Thread(target=_idle_loop, daemon=True)
+    set_current(current_face)
+    for k in ("w", "h", "r", "g", "b", "r_dw", "r_dh", "ox", "oy"):
+        cur[k] = tgt[k]
+    t = threading.Thread(target=_animate_loop, daemon=True)
     t.start()
-
-
-def _talk_loop():
-    mouth_open = True
-    while _speaking:
-        try:
-            render(current_face, talking=True, mouth_open=mouth_open)
-        except Exception:
-            pass
-        mouth_open = not mouth_open
-        time.sleep(0.32)
 
 
 def start_talking():
     global _speaking
     _speaking = True
-    t = threading.Thread(target=_talk_loop, daemon=True)
-    t.start()
 
 
 def stop_talking():
     global _speaking
     _speaking = False
-    render(current_face)
 
 
 if __name__ == "__main__":
     init()
-    for name in FACES:
+    start_idle()
+    for name in EXPR:
         print(name)
-        render(name)
-        time.sleep(1.6)
-    print("blink")
-    blink("neutral")
-    time.sleep(0.5)
-    render("neutral")
+        set_current(name)
+        time.sleep(3.0)
+    set_current("neutral")
+    time.sleep(3.0)
