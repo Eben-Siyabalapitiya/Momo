@@ -2,16 +2,15 @@ import json
 import os
 import subprocess
 import tempfile
+import requests
 import speech_recognition as sr
-import google.generativeai as genai
 from dotenv import load_dotenv
 import face
 
 load_dotenv()
 
 GEMINI_KEY = os.getenv("GEMINI_KEY")
-genai.configure(api_key=GEMINI_KEY)
-model = genai.GenerativeModel("gemini-2.0-flash-lite")
+GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key={GEMINI_KEY}"
 
 MEMORY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "memory.json")
 MAX_HISTORY = 8
@@ -71,15 +70,17 @@ def ask_gemini(text):
         convo += f"User: {turn['user']}\nMomo: {turn['momo']}\n"
     convo += f"User: {text}\nMomo:"
 
-    response = model.generate_content(convo)
-    raw = response.text.strip()
-    if raw.startswith("```"):
-        raw = raw.strip("`")
-        if raw.startswith("json"):
-            raw = raw[4:]
+    body = {"contents": [{"parts": [{"text": convo}]}]}
     try:
+        response = requests.post(GEMINI_URL, json=body, timeout=15)
+        response.raise_for_status()
+        raw = response.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+        if raw.startswith("```"):
+            raw = raw.strip("`")
+            if raw.startswith("json"):
+                raw = raw[4:]
         data = json.loads(raw)
-    except json.JSONDecodeError:
+    except (requests.RequestException, KeyError, IndexError, json.JSONDecodeError):
         data = {"say": "I got a bit tangled in my own thoughts.", "face": "confused", "remember": None}
 
     say = data.get("say", "...")
