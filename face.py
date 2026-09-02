@@ -53,7 +53,7 @@ def _lid_top(draw, box, frac):
 def _eye(draw, cx, cy, w, h, color, lid=None, pupil_dx=0, sparkle=False, blink=0.0):
     h = max(4, h * (1 - blink))
     box = [cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2]
-    radius = min(w, h) * 0.42
+    radius = min(w, h) * 0.28
     draw.rounded_rectangle(box, radius=radius, fill=color)
     if lid == "sad_l":
         _cut_corner(draw, box, "tl")
@@ -77,66 +77,66 @@ def _eye(draw, cx, cy, w, h, color, lid=None, pupil_dx=0, sparkle=False, blink=0
         draw.ellipse([scx - sr, scy - sr, scx + sr, scy + sr], fill=(255, 255, 255))
 
 
-EYE_L = 38
-EYE_R = 122
-CY = 46
+EYE_L = 34
+EYE_R = 126
+CY = 44
 
 
 def face_neutral(d, blink=0.0):
-    _eye(d, EYE_L, CY, 52, 48, (80, 220, 235), blink=blink)
-    _eye(d, EYE_R, CY, 52, 48, (80, 220, 235), blink=blink)
-    d.line([58, 104, 102, 104], fill=(210, 220, 230), width=5)
+    _eye(d, EYE_L, CY, 58, 56, (80, 220, 235), blink=blink)
+    _eye(d, EYE_R, CY, 58, 56, (80, 220, 235), blink=blink)
+    d.line([56, 106, 104, 106], fill=(210, 220, 230), width=5)
 
 
 def face_happy(d, blink=0.0):
-    _eye(d, EYE_L, CY, 52, 30, (90, 230, 150), blink=blink)
-    _eye(d, EYE_R, CY, 52, 30, (90, 230, 150), blink=blink)
-    d.arc([52, 88, 108, 122], start=20, end=160, fill=(210, 230, 220), width=6)
+    _eye(d, EYE_L, CY, 58, 34, (90, 230, 150), blink=blink)
+    _eye(d, EYE_R, CY, 58, 34, (90, 230, 150), blink=blink)
+    d.arc([48, 88, 112, 124], start=20, end=160, fill=(210, 230, 220), width=6)
 
 
 def face_sad(d, blink=0.0):
-    _eye(d, EYE_L, CY + 2, 50, 40, (120, 170, 230), lid="sad_l", blink=blink)
-    _eye(d, EYE_R, CY + 2, 50, 40, (120, 170, 230), lid="sad_r", blink=blink)
-    d.arc([54, 100, 106, 126], start=200, end=340, fill=(150, 180, 225), width=5)
+    _eye(d, EYE_L, CY + 2, 56, 46, (120, 170, 230), lid="sad_l", blink=blink)
+    _eye(d, EYE_R, CY + 2, 56, 46, (120, 170, 230), lid="sad_r", blink=blink)
+    d.arc([52, 100, 108, 127], start=200, end=340, fill=(150, 180, 225), width=5)
 
 
 def face_annoyed(d, blink=0.0):
-    _eye(d, EYE_L, CY, 54, 20, (235, 100, 60), lid="angry_l", blink=blink)
-    _eye(d, EYE_R, CY, 54, 20, (235, 100, 60), lid="angry_r", blink=blink)
-    d.line([60, 104, 100, 104], fill=(235, 120, 90), width=5)
+    _eye(d, EYE_L, CY, 60, 22, (235, 100, 60), lid="angry_l", blink=blink)
+    _eye(d, EYE_R, CY, 60, 22, (235, 100, 60), lid="angry_r", blink=blink)
+    d.line([58, 106, 102, 106], fill=(235, 120, 90), width=5)
 
 
 def face_confused(d, blink=0.0):
-    _eye(d, EYE_L, CY - 2, 46, 42, (100, 210, 230), blink=blink)
-    _eye(d, EYE_R, CY + 2, 46, 26, (140, 220, 235), lid="sad_r", blink=blink)
-    d.line([(56, 104), (66, 96), (78, 104), (90, 96), (102, 104)], fill=(210, 220, 230), width=4)
+    _eye(d, EYE_L, CY - 2, 52, 48, (100, 210, 230), blink=blink)
+    _eye(d, EYE_R, CY + 2, 52, 30, (140, 220, 235), lid="sad_r", blink=blink)
+    d.line([(54, 106), (65, 97), (78, 106), (91, 97), (104, 106)], fill=(210, 220, 230), width=4)
 
 
 def face_sleepy(d, blink=0.0):
-    _eye(d, EYE_L, CY, 52, 10, (150, 180, 220), blink=0.0)
-    _eye(d, EYE_R, CY, 52, 10, (150, 180, 220), blink=0.0)
-    d.ellipse([70, 100, 90, 118], outline=(150, 180, 220), width=4)
+    _eye(d, EYE_L, CY, 58, 12, (150, 180, 220), blink=0.0)
+    _eye(d, EYE_R, CY, 58, 12, (150, 180, 220), blink=0.0)
+    d.ellipse([68, 100, 90, 120], outline=(150, 180, 220), width=4)
     font = ImageFont.load_default()
-    d.text((128, 4), "Z", fill=(150, 180, 220), font=font)
-    d.text((140, 16), "z", fill=(150, 180, 220), font=font)
+    d.text((130, 4), "Z", fill=(150, 180, 220), font=font)
+    d.text((142, 16), "z", fill=(150, 180, 220), font=font)
 
 
 def face_excited(d, blink=0.0):
-    _eye(d, EYE_L, CY - 2, 58, 58, (255, 210, 60), sparkle=True, blink=blink)
-    _eye(d, EYE_R, CY - 2, 58, 58, (255, 210, 60), sparkle=True, blink=blink)
-    d.ellipse([58, 94, 102, 126], fill=(235, 90, 90))
+    _eye(d, EYE_L, CY - 2, 64, 64, (255, 210, 60), sparkle=True, blink=blink)
+    _eye(d, EYE_R, CY - 2, 64, 64, (255, 210, 60), sparkle=True, blink=blink)
+    d.ellipse([56, 96, 104, 128], fill=(235, 90, 90))
 
 
 def face_curious(d, blink=0.0):
-    _eye(d, EYE_L, CY, 52, 52, (110, 220, 235), pupil_dx=10, blink=blink)
-    _eye(d, EYE_R, CY - 2, 56, 50, (110, 220, 235), pupil_dx=10, blink=blink)
-    d.ellipse([68, 100, 92, 118], outline=(210, 220, 230), width=4)
+    _eye(d, EYE_L, CY, 58, 58, (110, 220, 235), pupil_dx=11, blink=blink)
+    _eye(d, EYE_R, CY - 2, 62, 56, (110, 220, 235), pupil_dx=11, blink=blink)
+    d.ellipse([66, 100, 94, 120], outline=(210, 220, 230), width=4)
 
 
 def face_smug(d, blink=0.0):
-    _eye(d, EYE_L, CY, 50, 40, (130, 220, 200), blink=blink)
-    _eye(d, EYE_R, CY + 4, 50, 22, (130, 220, 200), lid="heavy", blink=blink)
-    d.arc([52, 96, 108, 120], start=20, end=90, fill=(230, 210, 120), width=6)
+    _eye(d, EYE_L, CY, 56, 46, (130, 220, 200), blink=blink)
+    _eye(d, EYE_R, CY + 4, 56, 24, (130, 220, 200), lid="heavy", blink=blink)
+    d.arc([50, 96, 110, 122], start=20, end=90, fill=(230, 210, 120), width=6)
 
 
 FACES = {
