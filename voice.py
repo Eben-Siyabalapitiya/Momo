@@ -106,13 +106,14 @@ def speak(text):
         "-w", raw_path, text
     ])
     face.start_talking()
-    amp_enable.value = True
-    time.sleep(0.03)
-    subprocess.run(["aplay", "-D", "plughw:0,0", "--buffer-time=500000", raw_path])
-    amp_enable.value = False
-    face.stop_talking()
-
-    os.remove(raw_path)
+    try:
+        amp_enable.value = True
+        time.sleep(0.03)
+        subprocess.run(["aplay", "-D", "plughw:0,0", "--buffer-time=500000", raw_path])
+    finally:
+        amp_enable.value = False
+        face.stop_talking()
+        os.remove(raw_path)
 
 
 def handle_turn(text):
