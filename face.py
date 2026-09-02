@@ -12,6 +12,7 @@ BG = (8, 14, 36)
 _disp = None
 current_face = "neutral"
 _idle_started = False
+_speaking = False
 
 
 def init():
@@ -151,12 +152,17 @@ FACES = {
 }
 
 
-def render(name, **kwargs):
+def render(name, talking=False, mouth_open=False, **kwargs):
     if _disp is None:
         init()
     img = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(img)
     FACES.get(name, face_neutral)(d, **kwargs)
+    if talking:
+        if mouth_open:
+            d.ellipse([62, 96, 98, 124], fill=(230, 100, 100))
+        else:
+            d.line([64, 108, 96, 108], fill=(210, 220, 230), width=5)
     _disp.image(img, rotation=270)
 
 
@@ -171,20 +177,16 @@ def blink(name=None):
     name = name or current_face
     if name == "sleepy":
         return
-    render(name, blink=0.0)
-    time.sleep(0.05)
-    render(name, blink=0.6)
-    time.sleep(0.04)
     render(name, blink=1.0)
-    time.sleep(0.06)
-    render(name, blink=0.6)
-    time.sleep(0.04)
+    time.sleep(0.09)
     render(name, blink=0.0)
 
 
 def _idle_loop():
     while True:
         time.sleep(random.uniform(2.5, 5.5))
+        if _speaking:
+            continue
         try:
             blink()
         except Exception:
@@ -198,6 +200,30 @@ def start_idle():
     _idle_started = True
     t = threading.Thread(target=_idle_loop, daemon=True)
     t.start()
+
+
+def _talk_loop():
+    mouth_open = True
+    while _speaking:
+        try:
+            render(current_face, talking=True, mouth_open=mouth_open)
+        except Exception:
+            pass
+        mouth_open = not mouth_open
+        time.sleep(0.14)
+
+
+def start_talking():
+    global _speaking
+    _speaking = True
+    t = threading.Thread(target=_talk_loop, daemon=True)
+    t.start()
+
+
+def stop_talking():
+    global _speaking
+    _speaking = False
+    render(current_face)
 
 
 if __name__ == "__main__":
