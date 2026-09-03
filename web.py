@@ -382,14 +382,14 @@ function onVolume(value) {
 }
 
 async function saveVolume() {
-  const value = document.getElementById("volumeSlider").value;
-  await post("/set_volume", {amplitude: parseInt(value)});
+  await post("/set_volume", {amplitude: parseInt(document.getElementById("volumeSlider").value)});
   const flag = document.getElementById("volumeSavedFlag");
   flag.classList.add("show");
   setTimeout(function() { flag.classList.remove("show"); }, 1600);
 }
 
-function testVoice() {
+async function testVoice() {
+  await post("/set_volume", {amplitude: parseInt(document.getElementById("volumeSlider").value)});
   post("/test_voice", {});
 }
 
