@@ -35,7 +35,7 @@ EXPR = {
     "confused": {"w": 54, "h": 46, "color": (100, 210, 230), "lid": None,
                  "r_dw": 0, "r_dh": -16, "r_lid": "sad"},
     "sleepy":   {"w": 60, "h": 14, "color": (150, 180, 220), "lid": None},
-    "excited":  {"w": 68, "h": 70, "color": (255, 210, 60), "lid": None, "sparkle": True},
+    "excited":  {"w": 68, "h": 70, "color": (255, 210, 60), "lid": None},
     "curious":  {"w": 60, "h": 62, "color": (110, 220, 235), "lid": None,
                  "r_dw": 8, "r_dh": 4},
     "smug":     {"w": 58, "h": 44, "color": (130, 220, 200), "lid": None,
@@ -48,13 +48,21 @@ EXPR = {
                  "r_dw": -2, "r_dh": -2, "r_lid": "sad"},
     "dreamy":   {"w": 56, "h": 30, "color": (180, 190, 255), "lid": None},
     "alert":    {"w": 66, "h": 66, "color": (150, 235, 235), "lid": None},
+    "determined": {"w": 56, "h": 40, "color": (255, 140, 60), "lid": "angry", "r_lid": "angry"},
+    "sneaky":   {"w": 60, "h": 56, "color": (160, 120, 220), "lid": None,
+                 "r_dw": -30, "r_dh": -50, "r_lid": "heavy"},
+    "proud":    {"w": 66, "h": 58, "color": (255, 190, 90), "lid": "heavy"},
+    "worried":  {"w": 50, "h": 54, "color": (140, 180, 255), "lid": "sad", "r_lid": "sad"},
+    "silly":    {"w": 64, "h": 30, "color": (255, 150, 200), "lid": None,
+                 "r_dw": 10, "r_dh": 26},
 }
 
 ENERGY = {
     "excited": 1.0, "annoyed": 0.8, "surprised": 0.9, "alert": 0.85,
-    "happy": 0.5, "curious": 0.5, "playful": 0.6,
+    "happy": 0.5, "curious": 0.5, "playful": 0.6, "determined": 0.75,
+    "sneaky": 0.5, "proud": 0.55, "silly": 0.6,
     "neutral": 0.3, "confused": 0.4, "smug": 0.3, "bored": 0.2,
-    "shy": 0.25, "sad": 0.15, "dreamy": 0.15, "sleepy": 0.05,
+    "shy": 0.25, "sad": 0.15, "dreamy": 0.15, "sleepy": 0.05, "worried": 0.35,
 }
 
 cur = {"w": 60.0, "h": 62.0, "r": 80.0, "g": 220.0, "b": 235.0,
@@ -62,7 +70,6 @@ cur = {"w": 60.0, "h": 62.0, "r": 80.0, "g": 220.0, "b": 235.0,
 tgt = dict(cur)
 lid_L = None
 lid_R = None
-sparkle_on = False
 blink_amt = 0.0
 _settle_until = 0.0
 
@@ -143,13 +150,6 @@ def _frame():
     _draw_eye(_draw, EYE_L + cur["ox"], CY + cur["oy"], cur["w"], h_l, color, lid_L, True)
     _draw_eye(_draw, EYE_R + cur["ox"], CY + cur["oy"], w_r, h_r, color, lid_R, False)
 
-    if sparkle_on and blink_amt < 0.6:
-        for ex in (EYE_L, EYE_R):
-            sr = min(cur["w"], cur["h"]) * 0.1
-            scx = ex + cur["ox"] - cur["w"] * 0.18
-            scy = CY + cur["oy"] - cur["h"] * 0.22
-            _draw.ellipse([scx - sr, scy - sr, scx + sr, scy + sr], fill=(255, 255, 255))
-
     _push_frame(_img)
 
 
@@ -190,7 +190,7 @@ def _push_frame(img):
 
 
 def set_current(name):
-    global current_face, lid_L, lid_R, sparkle_on, tgt, _settle_until
+    global current_face, lid_L, lid_R, tgt, _settle_until
     if name not in EXPR:
         return
     prev = current_face
@@ -204,7 +204,6 @@ def set_current(name):
     }
     lid_L = spec.get("lid")
     lid_R = spec.get("r_lid", spec.get("lid"))
-    sparkle_on = spec.get("sparkle", False)
     if ENERGY.get(prev, 0.3) > 0.7 and ENERGY.get(name, 0.3) < 0.5:
         _settle_until = time.time() + random.uniform(3.0, 5.0)
 
@@ -343,7 +342,10 @@ def stop_talking():
     _speaking = False
 
 
-PARTY_COLORS = [(255, 80, 80), (255, 210, 60), (90, 230, 150), (120, 170, 255), (230, 130, 190)]
+PARTY_COLORS = [
+    (255, 80, 80), (255, 210, 60), (90, 230, 150),
+    (120, 170, 255), (230, 130, 190), (180, 90, 255),
+]
 
 
 def party_flash(duration=2.5):
@@ -351,9 +353,11 @@ def party_flash(duration=2.5):
         end = time.time() + duration
         i = 0
         while time.time() < end:
-            tgt["r"], tgt["g"], tgt["b"] = PARTY_COLORS[i % len(PARTY_COLORS)]
+            r, g, b = PARTY_COLORS[i % len(PARTY_COLORS)]
+            cur["r"], cur["g"], cur["b"] = r, g, b
+            tgt["r"], tgt["g"], tgt["b"] = r, g, b
             i += 1
-            time.sleep(0.22)
+            time.sleep(0.09)
         tgt["r"], tgt["g"], tgt["b"] = IDLE_BLUE
 
     threading.Thread(target=_run, daemon=True).start()
