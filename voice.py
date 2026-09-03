@@ -38,7 +38,7 @@ VALID_FACES = {
     "determined", "sneaky", "proud", "worried", "silly"
 }
 
-VALID_ACTIONS = {"none", "wave", "walk", "turn_left", "turn_right", "dance", "sit", "stand"}
+VALID_ACTIONS = {"none", "wave", "walk", "walk_back", "turn_left", "turn_right", "dance", "sit", "stand"}
 
 TIME_KEYWORDS = {"time", "clock"}
 WEATHER_KEYWORDS = {"weather", "forecast", "temperature", "raining", "outside"}
@@ -193,6 +193,8 @@ def perform_action(action):
             gait.wave()
         elif action == "walk":
             gait.walk_trot(1)
+        elif action == "walk_back":
+            gait.walk_backward(1)
         elif action == "turn_left":
             gait.turn_left_old(1)
         elif action == "turn_right":
