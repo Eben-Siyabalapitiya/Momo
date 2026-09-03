@@ -29,10 +29,11 @@ MAX_HISTORY = 8
 VALID_FACES = {
     "neutral", "happy", "sad", "annoyed", "confused",
     "sleepy", "excited", "curious", "smug",
-    "surprised", "playful", "bored", "shy", "dreamy", "alert"
+    "surprised", "playful", "bored", "shy", "dreamy", "alert",
+    "determined", "sneaky", "proud", "worried", "silly"
 }
 
-VALID_ACTIONS = {"none", "wave", "walk", "turn_left", "turn_right", "dance", "sit"}
+VALID_ACTIONS = {"none", "wave", "walk", "turn_left", "turn_right", "dance", "sit", "stand"}
 
 TIME_KEYWORDS = {"time", "clock"}
 WEATHER_KEYWORDS = {"weather", "forecast", "temperature", "raining", "outside"}
@@ -153,6 +154,8 @@ def perform_action(action):
             gait.dance()
         elif action == "sit":
             gait.sit()
+        elif action == "stand":
+            gait.stand()
     except Exception:
         pass
 
