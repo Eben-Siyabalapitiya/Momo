@@ -4,7 +4,7 @@ import threading
 import numpy
 import board
 import digitalio
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 from adafruit_rgb_display import st7735
 
 W, H = 160, 128
@@ -13,13 +13,19 @@ CY = 64
 EYE_L = 40
 EYE_R = 120
 
+FONT_PATH = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+
 _disp = None
 _img = None
 _draw = None
+_font_big = None
+_font_small = None
 
 current_face = "neutral"
 _running = False
 _speaking = False
+_overlay_until = 0.0
+_overlay_lines = []
 
 EXPR = {
     "neutral":  {"w": 60, "h": 62, "color": (80, 220, 235), "lid": None},
@@ -62,7 +68,7 @@ _settle_until = 0.0
 
 
 def init():
-    global _disp
+    global _disp, _font_big, _font_small
     cs_pin = digitalio.DigitalInOut(board.CE0)
     dc_pin = digitalio.DigitalInOut(board.D25)
     reset_pin = digitalio.DigitalInOut(board.D24)
@@ -79,6 +85,12 @@ def init():
         y_offset=1,
         bgr=True,
     )
+    try:
+        _font_big = ImageFont.truetype(FONT_PATH, 26)
+        _font_small = ImageFont.truetype(FONT_PATH, 15)
+    except Exception:
+        _font_big = ImageFont.load_default()
+        _font_small = _font_big
     return _disp
 
 
@@ -118,6 +130,11 @@ def _frame():
         _draw = ImageDraw.Draw(_img)
     _draw.rectangle([0, 0, W, H], fill=BG)
 
+    if time.time() < _overlay_until:
+        _draw_overlay(_draw)
+        _push_frame(_img)
+        return
+
     color = (int(cur["r"]), int(cur["g"]), int(cur["b"]))
     h_l = cur["h"] * (1 - blink_amt)
     h_r = (cur["h"] + cur["r_dh"]) * (1 - blink_amt)
@@ -134,6 +151,28 @@ def _frame():
             _draw.ellipse([scx - sr, scy - sr, scx + sr, scy + sr], fill=(255, 255, 255))
 
     _push_frame(_img)
+
+
+def _draw_overlay(draw):
+    fonts = [_font_big] + [_font_small] * max(0, len(_overlay_lines) - 1)
+    heights = []
+    for line, font in zip(_overlay_lines, fonts):
+        bbox = draw.textbbox((0, 0), line, font=font)
+        heights.append(bbox[3] - bbox[1])
+    total_h = sum(heights) + 6 * (len(_overlay_lines) - 1)
+    y = CY - total_h / 2
+    for line, font, h in zip(_overlay_lines, fonts, heights):
+        bbox = draw.textbbox((0, 0), line, font=font)
+        w = bbox[2] - bbox[0]
+        x = (W - w) / 2
+        draw.text((x, y), line, font=font, fill=(90, 210, 255))
+        y += h + 6
+
+
+def show_overlay(lines, duration=5.0):
+    global _overlay_lines, _overlay_until
+    _overlay_lines = lines
+    _overlay_until = time.time() + duration
 
 
 def _push_frame(img):
@@ -302,6 +341,22 @@ def start_talking():
 def stop_talking():
     global _speaking
     _speaking = False
+
+
+PARTY_COLORS = [(255, 80, 80), (255, 210, 60), (90, 230, 150), (120, 170, 255), (230, 130, 190)]
+
+
+def party_flash(duration=2.5):
+    def _run():
+        end = time.time() + duration
+        i = 0
+        while time.time() < end:
+            tgt["r"], tgt["g"], tgt["b"] = PARTY_COLORS[i % len(PARTY_COLORS)]
+            i += 1
+            time.sleep(0.22)
+        tgt["r"], tgt["g"], tgt["b"] = IDLE_BLUE
+
+    threading.Thread(target=_run, daemon=True).start()
 
 
 if __name__ == "__main__":
