@@ -1,3 +1,5 @@
+import json
+import os
 import threading
 import subprocess
 import time
@@ -16,6 +18,16 @@ gait_lock = threading.Lock()
 amp_enable = digitalio.DigitalInOut(board.D26)
 amp_enable.direction = digitalio.Direction.OUTPUT
 amp_enable.value = False
+
+TRANSCRIPT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "transcript.json")
+
+
+def get_transcript():
+    try:
+        with open(TRANSCRIPT_PATH) as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
 
 
 def get_power_status():
@@ -103,6 +115,12 @@ PAGE = """
   .power-dot.ok { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
   .power-dot.low { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
 
+  .transcript { max-height: 260px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem; }
+  .transcript .bubble { padding: 0.55rem 0.8rem; border-radius: 10px; font-size: 0.85rem; line-height: 1.4; max-width: 88%; }
+  .transcript .user { align-self: flex-end; background: var(--accent-dim); color: var(--accent); }
+  .transcript .momo { align-self: flex-start; background: var(--panel-2); border: 1px solid var(--border); }
+  .transcript .empty { color: var(--muted); font-size: 0.85rem; }
+
   .row { display: flex; align-items: center; gap: 0.8rem; }
   .row label { width: 5.5rem; font-size: 0.85rem; color: var(--muted); }
   input[type=range] { flex: 1; accent-color: var(--accent); }
@@ -147,6 +165,12 @@ PAGE = """
         <span class="power-dot" id="powerDot"></span>
         <p class="sub" id="powerText" style="margin:0;">Checking...</p>
       </div>
+    </div>
+
+    <div class="card">
+      <h2>Live Conversation</h2>
+      <p class="sub">Updates as you talk to Momo.</p>
+      <div id="transcriptList" class="transcript"></div>
     </div>
 
     <div class="card">
@@ -340,6 +364,39 @@ async function refreshPowerStatus() {
 }
 refreshPowerStatus();
 setInterval(refreshPowerStatus, 15000);
+
+let lastTranscriptLen = -1;
+
+async function refreshTranscript() {
+  try {
+    const res = await fetch("/transcript");
+    const turns = await res.json();
+    if (turns.length === lastTranscriptLen) return;
+    lastTranscriptLen = turns.length;
+    const list = document.getElementById("transcriptList");
+    list.innerHTML = "";
+    if (turns.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = "Nothing yet — say something to Momo.";
+      list.appendChild(empty);
+      return;
+    }
+    turns.forEach(function(turn) {
+      const userBubble = document.createElement("div");
+      userBubble.className = "bubble user";
+      userBubble.textContent = turn.user;
+      list.appendChild(userBubble);
+      const momoBubble = document.createElement("div");
+      momoBubble.className = "bubble momo";
+      momoBubble.textContent = turn.momo;
+      list.appendChild(momoBubble);
+    });
+    list.scrollTop = list.scrollHeight;
+  } catch (e) {}
+}
+refreshTranscript();
+setInterval(refreshTranscript, 2500);
 
 async function post(url, body) {
   await fetch(url, {
@@ -689,6 +746,11 @@ def wifi_status():
 @app.route("/power/status")
 def power_status():
     return jsonify(get_power_status())
+
+
+@app.route("/transcript")
+def transcript_route():
+    return jsonify(get_transcript())
 
 
 @app.route("/wifi/scan", methods=["POST"])

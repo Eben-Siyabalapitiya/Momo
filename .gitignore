@@ -3,6 +3,7 @@ config.json
 memory.json
 voice_settings.json
 persona.json
+transcript.json
 __pycache__/
 *.pyc
 .venv/
