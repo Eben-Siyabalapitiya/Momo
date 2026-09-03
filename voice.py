@@ -1,6 +1,7 @@
 import datetime
 import json
 import os
+import random
 import subprocess
 import tempfile
 import threading
@@ -41,6 +42,13 @@ VALID_ACTIONS = {"none", "wave", "walk", "turn_left", "turn_right", "dance", "si
 
 TIME_KEYWORDS = {"time", "clock"}
 WEATHER_KEYWORDS = {"weather", "forecast", "temperature", "raining", "outside"}
+
+EMPTY_REPLY_FALLBACKS = [
+    "nah, too lazy for that one.",
+    "my brain just blanked, say that again?",
+    "not sure how to answer that, try me again.",
+    "eh, can't do that one.",
+]
 
 history = []
 facts = []
@@ -137,7 +145,10 @@ def ask_gemini(text, extra=None):
     except (requests.RequestException, KeyError, IndexError, json.JSONDecodeError):
         data = {"say": "I got a bit tangled in my own thoughts.", "face": "confused", "action": "none", "remember": None}
 
-    say = data.get("say", "...")
+    say = data.get("say") or ""
+    say = say.strip()
+    if not say:
+        say = random.choice(EMPTY_REPLY_FALLBACKS)
     face_name = data.get("face", "neutral")
     if face_name not in VALID_FACES:
         face_name = "neutral"
