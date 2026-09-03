@@ -29,6 +29,7 @@ GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.
 session = requests.Session()
 
 MEMORY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "memory.json")
+TRANSCRIPT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "transcript.json")
 MAX_HISTORY = 8
 
 VALID_FACES = {
@@ -66,6 +67,14 @@ def load_memory():
 def save_memory():
     with open(MEMORY_PATH, "w") as f:
         json.dump({"history": history, "facts": facts}, f, indent=2)
+
+
+def save_transcript():
+    try:
+        with open(TRANSCRIPT_PATH, "w") as f:
+            json.dump(history, f, indent=2)
+    except OSError:
+        pass
 
 
 recognizer = sr.Recognizer()
@@ -249,6 +258,7 @@ def handle_turn(text):
     history.append({"user": text, "momo": say})
     if len(history) > MAX_HISTORY:
         del history[0]
+    save_transcript()
     if remember:
         facts.append(remember)
         save_memory()
