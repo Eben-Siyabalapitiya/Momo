@@ -1,5 +1,8 @@
 import threading
 import subprocess
+import time
+import board
+import digitalio
 from flask import Flask, request, render_template_string, jsonify
 import servos
 import gait
@@ -8,6 +11,10 @@ import persona
 
 app = Flask(__name__)
 gait_lock = threading.Lock()
+
+amp_enable = digitalio.DigitalInOut(board.D26)
+amp_enable.direction = digitalio.Direction.OUTPUT
+amp_enable.value = False
 
 PAGE = """
 <!doctype html>
@@ -133,11 +140,15 @@ PAGE = """
 
     <div class="card">
       <h2>Voice</h2>
-      <p class="sub">Playback volume and a quick test line. Applies live, no restart needed.</p>
+      <p class="sub">Adjust and press Save to apply on Momo immediately. No restart needed.</p>
       <div class="row">
         <label>Volume</label>
         <input type="range" min="0" max="200" value="{{ volume }}" id="volumeSlider" oninput="onVolume(this.value)">
         <span class="val" id="volumeVal">{{ volume }}</span>
+      </div>
+      <div class="save-row">
+        <button class="btn primary" onclick="saveVolume()">Save</button>
+        <span class="saved-flag" id="volumeSavedFlag">Saved</span>
       </div>
       <div class="actions" style="margin-top:0.9rem;">
         <button class="btn" onclick="testVoice()">Test Voice</button>
@@ -368,9 +379,14 @@ async function dance() {
 
 function onVolume(value) {
   document.getElementById("volumeVal").textContent = value;
-  throttled("volume", function() {
-    post("/set_volume", {amplitude: parseInt(value)});
-  });
+}
+
+async function saveVolume() {
+  const value = document.getElementById("volumeSlider").value;
+  await post("/set_volume", {amplitude: parseInt(value)});
+  const flag = document.getElementById("volumeSavedFlag");
+  flag.classList.add("show");
+  setTimeout(function() { flag.classList.remove("show"); }, 1600);
 }
 
 function testVoice() {
@@ -477,7 +493,12 @@ def test_voice():
         "-a", str(settings["amplitude"]),
         "-w", "/tmp/web_voice_test.wav", "Hi, I'm Momo!"
     ])
-    subprocess.run(["aplay", "-D", "plughw:0,0", "--buffer-time=500000", "/tmp/web_voice_test.wav"])
+    try:
+        amp_enable.value = True
+        time.sleep(0.03)
+        subprocess.run(["aplay", "-D", "plughw:0,0", "--buffer-time=500000", "/tmp/web_voice_test.wav"])
+    finally:
+        amp_enable.value = False
     return "", 204
 
 
