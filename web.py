@@ -146,8 +146,13 @@ PAGE = """
         <input type="range" min="0" max="200" value="{{ volume }}" id="volumeSlider" oninput="onVolume(this.value)">
         <span class="val" id="volumeVal">{{ volume }}</span>
       </div>
+      <div class="row" style="margin-top:0.6rem;">
+        <label>Speed</label>
+        <input type="range" min="80" max="250" value="{{ speed }}" id="speedSlider" oninput="onSpeed(this.value)">
+        <span class="val" id="speedVal">{{ speed }}</span>
+      </div>
       <div class="save-row">
-        <button class="btn primary" onclick="saveVolume()">Save</button>
+        <button class="btn primary" onclick="saveVoiceSettings()">Save</button>
         <span class="saved-flag" id="volumeSavedFlag">Saved</span>
       </div>
       <div class="actions" style="margin-top:0.9rem;">
@@ -381,15 +386,26 @@ function onVolume(value) {
   document.getElementById("volumeVal").textContent = value;
 }
 
-async function saveVolume() {
-  await post("/set_volume", {amplitude: parseInt(document.getElementById("volumeSlider").value)});
+function onSpeed(value) {
+  document.getElementById("speedVal").textContent = value;
+}
+
+function currentVoiceSettings() {
+  return {
+    amplitude: parseInt(document.getElementById("volumeSlider").value),
+    speed: parseInt(document.getElementById("speedSlider").value)
+  };
+}
+
+async function saveVoiceSettings() {
+  await post("/set_volume", currentVoiceSettings());
   const flag = document.getElementById("volumeSavedFlag");
   flag.classList.add("show");
   setTimeout(function() { flag.classList.remove("show"); }, 1600);
 }
 
 async function testVoice() {
-  await post("/set_volume", {amplitude: parseInt(document.getElementById("volumeSlider").value)});
+  await post("/set_volume", currentVoiceSettings());
   post("/test_voice", {});
 }
 
@@ -431,11 +447,11 @@ SIDE_GROUPS = [
 @app.route("/")
 def index():
     startups = {str(ch): servos.get_startup(ch) for ch in range(8)}
-    volume = voice_settings.get_amplitude()
+    settings = voice_settings.load()
     persona_prompt = persona.load()
     return render_template_string(
         PAGE, legs=LEGS_ORDER, groups=SIDE_GROUPS, startups=startups,
-        volume=volume, persona_prompt=persona_prompt
+        volume=settings["amplitude"], speed=settings["speed"], persona_prompt=persona_prompt
     )
 
 
@@ -479,7 +495,11 @@ def reset_all():
 @app.route("/set_volume", methods=["POST"])
 def set_volume():
     data = request.get_json()
-    voice_settings.set_amplitude(int(data["amplitude"]))
+    settings = voice_settings.load()
+    settings["amplitude"] = int(data["amplitude"])
+    if "speed" in data:
+        settings["speed"] = int(data["speed"])
+    voice_settings.save(settings)
     return "", 204
 
 
