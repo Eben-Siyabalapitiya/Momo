@@ -126,6 +126,8 @@ PAGE = """
       </div>
       <div class="actions" style="margin-top:1.1rem;">
         <button class="btn" id="waveBtn" onclick="wave()">Wave</button>
+        <button class="btn" id="sitBtn" onclick="sit()">Sit</button>
+        <button class="btn" id="danceBtn" onclick="dance()">Dance</button>
       </div>
     </div>
 
@@ -348,6 +350,22 @@ async function wave() {
   btn.textContent = "Wave";
 }
 
+async function sit() {
+  const btn = document.getElementById("sitBtn");
+  btn.disabled = true;
+  await post("/sit", {});
+  btn.disabled = false;
+}
+
+async function dance() {
+  const btn = document.getElementById("danceBtn");
+  btn.disabled = true;
+  btn.textContent = "Dancing...";
+  await post("/dance", {});
+  btn.disabled = false;
+  btn.textContent = "Dance";
+}
+
 function onVolume(value) {
   document.getElementById("volumeVal").textContent = value;
   throttled("volume", function() {
@@ -483,6 +501,28 @@ def wave_route():
         return "", 409
     try:
         gait.wave()
+    finally:
+        gait_lock.release()
+    return "", 204
+
+
+@app.route("/sit", methods=["POST"])
+def sit_route():
+    if not gait_lock.acquire(blocking=False):
+        return "", 409
+    try:
+        gait.sit()
+    finally:
+        gait_lock.release()
+    return "", 204
+
+
+@app.route("/dance", methods=["POST"])
+def dance_route():
+    if not gait_lock.acquire(blocking=False):
+        return "", 409
+    try:
+        gait.dance()
     finally:
         gait_lock.release()
     return "", 204
