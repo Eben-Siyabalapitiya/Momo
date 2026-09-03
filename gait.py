@@ -279,6 +279,15 @@ def sit():
         time.sleep(STEP_DELAY)
 
 
+def stand():
+    for leg in servos.LEGS:
+        hip_ch = servos.LEGS[leg]["hip"]
+        knee_ch = servos.LEGS[leg]["knee"]
+        servos.set_channel(hip_ch, servos.get_startup(hip_ch))
+        servos.set_channel(knee_ch, servos.get_startup(knee_ch))
+        time.sleep(STEP_DELAY)
+
+
 DANCE_HIP_SWING = 30
 DANCE_KNEE_BOUNCE = 35
 DANCE_REPS = 5
