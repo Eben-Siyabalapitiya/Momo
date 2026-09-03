@@ -23,6 +23,8 @@ load_dotenv()
 GEMINI_KEY = os.getenv("GEMINI_KEY")
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key={GEMINI_KEY}"
 
+session = requests.Session()
+
 MEMORY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "memory.json")
 MAX_HISTORY = 8
 
@@ -56,22 +58,31 @@ def save_memory():
         json.dump({"history": history, "facts": facts}, f, indent=2)
 
 
-def listen():
-    recognizer = sr.Recognizer()
+recognizer = sr.Recognizer()
+
+
+def calibrate_mic():
     with sr.Microphone() as source:
-        recognizer.adjust_for_ambient_noise(source, duration=0.5)
+        recognizer.adjust_for_ambient_noise(source, duration=1.0)
+
+
+def listen():
+    with sr.Microphone() as source:
         audio = recognizer.listen(source, phrase_time_limit=8)
+    stt_start = time.time()
     try:
-        return recognizer.recognize_google(audio)
+        text = recognizer.recognize_google(audio)
     except sr.UnknownValueError:
-        return None
+        text = None
     except sr.RequestError:
-        return None
+        text = None
+    print(f"timing: stt={time.time() - stt_start:.2f}s")
+    return text
 
 
 def get_weather():
     try:
-        response = requests.get("https://wttr.in/?format=%C+%t", timeout=6)
+        response = session.get("https://wttr.in/?format=%C+%t", timeout=6)
         response.raise_for_status()
         return response.text.strip()
     except requests.RequestException:
@@ -92,8 +103,10 @@ def ask_gemini(text, extra=None):
     convo += f"User: {text}\nMomo:"
 
     body = {"contents": [{"parts": [{"text": convo}]}]}
+    gemini_start = time.time()
     try:
-        response = requests.post(GEMINI_URL, json=body, timeout=15)
+        response = session.post(GEMINI_URL, json=body, timeout=15)
+        print(f"timing: gemini={time.time() - gemini_start:.2f}s")
         response.raise_for_status()
         raw = response.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
         if raw.startswith("```"):
@@ -121,6 +134,7 @@ def speak(text):
         raw_path = raw_file.name
 
     settings = voice_settings.load()
+    synth_start = time.time()
     subprocess.run([
         "espeak", "-v", "en+m7",
         "-p", str(settings["pitch"]),
@@ -128,11 +142,14 @@ def speak(text):
         "-a", str(settings["amplitude"]),
         "-w", raw_path, text
     ])
+    print(f"timing: tts_synth={time.time() - synth_start:.2f}s")
     face.start_talking()
     try:
         amp_enable.value = True
         time.sleep(0.03)
+        playback_start = time.time()
         subprocess.run(["aplay", "-D", "plughw:0,0", "--buffer-time=500000", raw_path])
+        print(f"timing: tts_playback={time.time() - playback_start:.2f}s")
     finally:
         amp_enable.value = False
         face.stop_talking()
@@ -161,6 +178,7 @@ def perform_action(action):
 
 
 def handle_turn(text):
+    turn_start = time.time()
     lowered = text.lower()
     extra = None
     overlay = None
@@ -186,6 +204,7 @@ def handle_turn(text):
     if remember:
         facts.append(remember)
         save_memory()
+    print(f"timing: turn_total={time.time() - turn_start:.2f}s")
     return say, face_name
 
 
@@ -194,6 +213,7 @@ def run():
     face.init()
     face.set_current("curious")
     face.start_idle()
+    calibrate_mic()
     try:
         while True:
             text = listen()
