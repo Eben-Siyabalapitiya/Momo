@@ -8,6 +8,7 @@ import servos
 import gait
 import voice_settings
 import persona
+import wifi_setup
 
 app = Flask(__name__)
 gait_lock = threading.Lock()
@@ -117,6 +118,7 @@ PAGE = """
   <nav class="tabs">
     <button class="tab-btn active" data-tab="control">Control</button>
     <button class="tab-btn" data-tab="personality">Personality</button>
+    <button class="tab-btn" data-tab="wifi">WiFi</button>
     <button class="tab-btn" data-tab="calibration">Calibration</button>
   </nav>
 
@@ -179,6 +181,39 @@ PAGE = """
         <button class="btn primary" onclick="savePersona()">Save</button>
         <span class="saved-flag" id="savedFlag">Saved</span>
       </div>
+    </div>
+  </section>
+
+  <section id="tab-wifi">
+    <div class="card">
+      <h2>Status</h2>
+      <p class="sub" id="wifiStatusText">Checking...</p>
+      <div class="actions">
+        <button class="btn" onclick="refreshWifiStatus()">Refresh</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Connect to a Network</h2>
+      <p class="sub">Scan for nearby networks, or type a name directly.</p>
+      <div class="actions" style="margin-bottom:0.9rem;">
+        <button class="btn" onclick="scanWifi()" id="scanBtn">Scan Networks</button>
+      </div>
+      <div id="wifiList"></div>
+      <div class="row" style="margin-top:0.9rem;">
+        <label>Network</label>
+        <input type="text" id="wifiSsid" placeholder="Network name"
+               style="flex:1;background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.7rem;">
+      </div>
+      <div class="row" style="margin-top:0.6rem;">
+        <label>Password</label>
+        <input type="password" id="wifiPassword" placeholder="Password"
+               style="flex:1;background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.7rem;">
+      </div>
+      <div class="actions" style="margin-top:0.9rem;">
+        <button class="btn primary" onclick="connectWifi()" id="connectBtn">Connect</button>
+      </div>
+      <p class="sub" id="wifiConnectStatus" style="margin-top:0.8rem;"></p>
     </div>
   </section>
 
@@ -254,6 +289,7 @@ document.querySelectorAll(".tab-btn").forEach(function(btn) {
     document.querySelectorAll("section").forEach(function(s) { s.classList.remove("active"); });
     btn.classList.add("active");
     document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+    if (btn.dataset.tab === "wifi") refreshWifiStatus();
   });
 });
 
@@ -425,6 +461,67 @@ async function savePersona() {
   flag.classList.add("show");
   setTimeout(function() { flag.classList.remove("show"); }, 1600);
 }
+
+async function refreshWifiStatus() {
+  const el = document.getElementById("wifiStatusText");
+  el.textContent = "Checking...";
+  try {
+    const res = await fetch("/wifi/status");
+    const data = await res.json();
+    if (data.mode === "connected") {
+      el.textContent = "Connected to " + data.ssid + " (" + data.ip + ")";
+    } else if (data.mode === "hotspot") {
+      el.textContent = "Setup mode active — broadcasting its own WiFi for new-network setup.";
+    } else {
+      el.textContent = "Status unknown.";
+    }
+  } catch (e) {
+    el.textContent = "Could not check status.";
+  }
+}
+
+async function scanWifi() {
+  const btn = document.getElementById("scanBtn");
+  const listEl = document.getElementById("wifiList");
+  btn.disabled = true;
+  btn.textContent = "Scanning...";
+  listEl.innerHTML = "";
+  try {
+    const res = await fetch("/wifi/scan", {method: "POST"});
+    const networks = await res.json();
+    networks.forEach(function(n) {
+      const row = document.createElement("button");
+      row.className = "btn";
+      row.style.display = "block";
+      row.style.width = "100%";
+      row.style.textAlign = "left";
+      row.style.marginBottom = "0.4rem";
+      row.textContent = n.ssid + (n.secured ? " 🔒" : "") + "  ·  signal " + n.signal + "%";
+      row.onclick = function() { document.getElementById("wifiSsid").value = n.ssid; };
+      listEl.appendChild(row);
+    });
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Scan Networks";
+  }
+}
+
+async function connectWifi() {
+  const ssid = document.getElementById("wifiSsid").value.trim();
+  const password = document.getElementById("wifiPassword").value;
+  const statusEl = document.getElementById("wifiConnectStatus");
+  const btn = document.getElementById("connectBtn");
+  if (!ssid) {
+    statusEl.textContent = "Type or pick a network name first.";
+    return;
+  }
+  btn.disabled = true;
+  statusEl.textContent = "Connecting to " + ssid + "... Momo's own hotspot will drop now — if it succeeds, join " + ssid + " with this device to keep using the panel.";
+  try {
+    await post("/wifi/connect", {ssid: ssid, password: password});
+  } catch (e) {}
+  btn.disabled = false;
+}
 </script>
 </body>
 </html>
@@ -534,6 +631,28 @@ def home():
     for ch in range(8):
         servos.set_channel(ch, servos.get_startup(ch))
     return "", 204
+
+
+@app.route("/wifi/status")
+def wifi_status():
+    return jsonify(wifi_setup.read_status())
+
+
+@app.route("/wifi/scan", methods=["POST"])
+def wifi_scan():
+    return jsonify(wifi_setup.scan_networks())
+
+
+@app.route("/wifi/connect", methods=["POST"])
+def wifi_connect():
+    data = request.get_json()
+    ssid = data.get("ssid", "").strip()
+    password = data.get("password", "")
+    if not ssid:
+        return "", 400
+    wifi_setup.write_status("connecting", ssid=ssid)
+    wifi_setup.connect_async(ssid, password)
+    return "", 202
 
 
 @app.route("/wave", methods=["POST"])
