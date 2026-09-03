@@ -72,7 +72,7 @@ def init():
         cs=cs_pin,
         dc=dc_pin,
         rst=reset_pin,
-        baudrate=24000000,
+        baudrate=16000000,
         width=128,
         height=160,
         x_offset=2,
@@ -139,7 +139,7 @@ def _frame():
 def _push_frame(img):
     try:
         rotated = img.rotate(270, expand=True)
-        data = numpy.asarray(rotated, dtype=numpy.uint16)
+        data = numpy.array(rotated.convert("RGB")).astype(numpy.uint16)
         color = ((data[:, :, 0] & 0xF8) << 8) | ((data[:, :, 1] & 0xFC) << 3) | (data[:, :, 2] >> 3)
         hi = (color >> 8).astype(numpy.uint8)
         lo = (color & 0xFF).astype(numpy.uint8)
