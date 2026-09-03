@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 import subprocess
@@ -31,7 +32,10 @@ VALID_FACES = {
     "surprised", "playful", "bored", "shy", "dreamy", "alert"
 }
 
-VALID_ACTIONS = {"none", "wave", "walk", "turn_left", "turn_right"}
+VALID_ACTIONS = {"none", "wave", "walk", "turn_left", "turn_right", "dance", "sit"}
+
+TIME_KEYWORDS = {"time", "clock"}
+WEATHER_KEYWORDS = {"weather", "forecast", "temperature", "raining", "outside"}
 
 history = []
 facts = []
@@ -64,8 +68,19 @@ def listen():
         return None
 
 
-def ask_gemini(text):
+def get_weather():
+    try:
+        response = requests.get("https://wttr.in/?format=%C+%t", timeout=6)
+        response.raise_for_status()
+        return response.text.strip()
+    except requests.RequestException:
+        return None
+
+
+def ask_gemini(text, extra=None):
     convo = persona.load() + "\n\n"
+    if extra:
+        convo += extra + "\n\n"
     if facts:
         convo += "Things you already know about your owner:\n"
         for fact in facts:
@@ -133,14 +148,34 @@ def perform_action(action):
             gait.turn_left_old(1)
         elif action == "turn_right":
             gait.turn_right_old(1)
+        elif action == "dance":
+            face.party_flash(gait.DANCE_REPS * gait.DANCE_STEP_DELAY * 2 + 0.5)
+            gait.dance()
+        elif action == "sit":
+            gait.sit()
     except Exception:
         pass
 
 
 def handle_turn(text):
-    say, face_name, action, remember = ask_gemini(text)
+    lowered = text.lower()
+    extra = None
+    overlay = None
+    if any(k in lowered for k in TIME_KEYWORDS):
+        now_str = datetime.datetime.now().strftime("%I:%M %p").lstrip("0")
+        extra = f"The current time is {now_str}."
+        overlay = ["Time", now_str]
+    elif any(k in lowered for k in WEATHER_KEYWORDS):
+        weather = get_weather()
+        if weather:
+            extra = f"The current weather is: {weather}."
+            overlay = ["Weather", weather]
+
+    say, face_name, action, remember = ask_gemini(text, extra)
     face.set_current(face_name)
     speak(say)
+    if overlay:
+        face.show_overlay(overlay, duration=6.0)
     perform_action(action)
     history.append({"user": text, "momo": say})
     if len(history) > MAX_HISTORY:
