@@ -267,5 +267,40 @@ def wave():
     servos.set_channel(bl_knee, bl_knee_home)
 
 
+SIT_KNEE_DIP = 90
+
+
+def sit():
+    for leg in servos.LEGS:
+        hip_ch = servos.LEGS[leg]["hip"]
+        knee_ch = servos.LEGS[leg]["knee"]
+        servos.set_channel(hip_ch, 90)
+        servos.set_channel(knee_ch, _dip_target(servos.get_startup(knee_ch), SIT_KNEE_DIP))
+        time.sleep(STEP_DELAY)
+
+
+DANCE_HIP_SWING = 30
+DANCE_KNEE_BOUNCE = 35
+DANCE_REPS = 5
+DANCE_STEP_DELAY = 0.16
+
+
+def dance(reps=DANCE_REPS):
+    for _ in range(reps):
+        for leg in servos.LEGS:
+            hip_ch = servos.LEGS[leg]["hip"]
+            knee_ch = servos.LEGS[leg]["knee"]
+            servos.set_channel(hip_ch, 90 + DANCE_HIP_SWING)
+            servos.set_channel(knee_ch, _dip_target(servos.get_startup(knee_ch), DANCE_KNEE_BOUNCE))
+        time.sleep(DANCE_STEP_DELAY)
+        for leg in servos.LEGS:
+            hip_ch = servos.LEGS[leg]["hip"]
+            knee_ch = servos.LEGS[leg]["knee"]
+            servos.set_channel(hip_ch, 90 - DANCE_HIP_SWING)
+            servos.set_channel(knee_ch, servos.get_startup(knee_ch))
+        time.sleep(DANCE_STEP_DELAY)
+    _settle()
+
+
 if __name__ == "__main__":
     walk_forward(3)
