@@ -143,7 +143,7 @@ def ask_gemini(text, extra=None):
                 raw = raw[4:]
         data = json.loads(raw)
     except (requests.RequestException, KeyError, IndexError, json.JSONDecodeError):
-        data = {"say": "I got a bit tangled in my own thoughts.", "face": "confused", "action": "none", "remember": None}
+        data = {"say": "I got a bit tangled in my own thoughts.", "face": "confused", "actions": [], "show": None, "remember": None}
 
     say = data.get("say") or ""
     say = say.strip()
@@ -152,12 +152,19 @@ def ask_gemini(text, extra=None):
     face_name = data.get("face", "neutral")
     if face_name not in VALID_FACES:
         face_name = "neutral"
-    action = data.get("action", "none")
-    if action not in VALID_ACTIONS:
-        action = "none"
+
+    raw_actions = data.get("actions", data.get("action", []))
+    if isinstance(raw_actions, str):
+        raw_actions = [raw_actions]
+    actions = [a for a in raw_actions if a in VALID_ACTIONS and a != "none"]
+
+    show = data.get("show") or None
+    if show:
+        show = str(show).strip() or None
+
     remember = data.get("remember")
 
-    return say, face_name, action, remember
+    return say, face_name, actions, show, remember
 
 
 def speak(text):
@@ -187,27 +194,32 @@ def speak(text):
         os.remove(raw_path)
 
 
-def perform_action(action):
-    try:
-        if action == "wave":
-            gait.wave()
-        elif action == "walk":
-            gait.walk_trot(1)
-        elif action == "walk_back":
-            gait.walk_backward(1)
-        elif action == "turn_left":
-            gait.turn_left_old(1)
-        elif action == "turn_right":
-            gait.turn_right_old(1)
-        elif action == "dance":
-            face.party_flash(gait.DANCE_REPS * gait.DANCE_STEP_DELAY * 2 + 0.5)
-            gait.dance()
-        elif action == "sit":
-            gait.sit()
-        elif action == "stand":
-            gait.stand()
-    except Exception:
-        pass
+def _run_one_action(action):
+    if action == "wave":
+        gait.wave()
+    elif action == "walk":
+        gait.walk_trot(1)
+    elif action == "walk_back":
+        gait.walk_backward(1)
+    elif action == "turn_left":
+        gait.turn_left_old(1)
+    elif action == "turn_right":
+        gait.turn_right_old(1)
+    elif action == "dance":
+        face.party_flash(gait.DANCE_REPS * gait.DANCE_STEP_DELAY * 2 + 0.5)
+        gait.dance()
+    elif action == "sit":
+        gait.sit()
+    elif action == "stand":
+        gait.stand()
+
+
+def perform_actions(actions):
+    for action in actions:
+        try:
+            _run_one_action(action)
+        except Exception:
+            pass
 
 
 def handle_turn(text):
@@ -225,13 +237,14 @@ def handle_turn(text):
             extra = f"The current weather is: {weather}."
             overlay = ["Weather", weather]
 
-    say, face_name, action, remember = ask_gemini(text, extra)
+    say, face_name, actions, show, remember = ask_gemini(text, extra)
     face.set_current(face_name)
-    action_thread = threading.Thread(target=perform_action, args=(action,), daemon=True)
+    action_thread = threading.Thread(target=perform_actions, args=(actions,), daemon=True)
     action_thread.start()
     speak(say)
-    if overlay:
-        face.show_overlay(overlay, duration=6.0)
+    display = overlay or ([show] if show else None)
+    if display:
+        face.show_overlay(display, duration=6.0)
     action_thread.join()
     history.append({"user": text, "momo": say})
     if len(history) > MAX_HISTORY:
