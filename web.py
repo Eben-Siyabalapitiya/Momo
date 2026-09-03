@@ -17,6 +17,20 @@ amp_enable = digitalio.DigitalInOut(board.D26)
 amp_enable.direction = digitalio.Direction.OUTPUT
 amp_enable.value = False
 
+
+def get_power_status():
+    try:
+        result = subprocess.run(["vcgencmd", "get_throttled"], capture_output=True, text=True, timeout=5)
+        bits = int(result.stdout.strip().split("=")[1], 16)
+    except Exception:
+        return {"ok": True, "undervoltage_now": False, "undervoltage_ever": False, "throttled_ever": False}
+    return {
+        "ok": not (bits & 0x1),
+        "undervoltage_now": bool(bits & 0x1),
+        "undervoltage_ever": bool(bits & 0x10000),
+        "throttled_ever": bool(bits & 0x40000),
+    }
+
 PAGE = """
 <!doctype html>
 <html>
@@ -85,6 +99,10 @@ PAGE = """
   .dpad-right { grid-column: 3; grid-row: 2; }
   .dpad-down { grid-column: 2; grid-row: 3; }
 
+  .power-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; background: var(--muted); }
+  .power-dot.ok { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  .power-dot.low { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+
   .row { display: flex; align-items: center; gap: 0.8rem; }
   .row label { width: 5.5rem; font-size: 0.85rem; color: var(--muted); }
   input[type=range] { flex: 1; accent-color: var(--accent); }
@@ -123,6 +141,14 @@ PAGE = """
   </nav>
 
   <section id="tab-control" class="active">
+    <div class="card">
+      <h2>Power</h2>
+      <div class="row">
+        <span class="power-dot" id="powerDot"></span>
+        <p class="sub" id="powerText" style="margin:0;">Checking...</p>
+      </div>
+    </div>
+
     <div class="card">
       <h2>Move</h2>
       <p class="sub">Each press runs 2 step cycles.</p>
@@ -292,6 +318,28 @@ document.querySelectorAll(".tab-btn").forEach(function(btn) {
     if (btn.dataset.tab === "wifi") refreshWifiStatus();
   });
 });
+
+async function refreshPowerStatus() {
+  try {
+    const res = await fetch("/power/status");
+    const data = await res.json();
+    const dot = document.getElementById("powerDot");
+    const text = document.getElementById("powerText");
+    dot.classList.remove("ok", "low");
+    if (data.undervoltage_now) {
+      dot.classList.add("low");
+      text.textContent = "Low battery — charge now";
+    } else if (data.undervoltage_ever) {
+      dot.classList.add("low");
+      text.textContent = "OK now, but dipped low recently — charge soon";
+    } else {
+      dot.classList.add("ok");
+      text.textContent = "Power OK";
+    }
+  } catch (e) {}
+}
+refreshPowerStatus();
+setInterval(refreshPowerStatus, 15000);
 
 async function post(url, body) {
   await fetch(url, {
@@ -636,6 +684,11 @@ def home():
 @app.route("/wifi/status")
 def wifi_status():
     return jsonify(wifi_setup.read_status())
+
+
+@app.route("/power/status")
+def power_status():
+    return jsonify(get_power_status())
 
 
 @app.route("/wifi/scan", methods=["POST"])
