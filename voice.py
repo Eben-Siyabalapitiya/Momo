@@ -3,7 +3,9 @@ import json
 import os
 import subprocess
 import tempfile
+import threading
 import time
+import numpy
 import requests
 import speech_recognition as sr
 import board
@@ -66,16 +68,34 @@ def calibrate_mic():
         recognizer.adjust_for_ambient_noise(source, duration=1.0)
 
 
+MIC_GAIN = 5.0
+
+
+def _boost_audio(audio, gain=MIC_GAIN):
+    raw = audio.get_raw_data()
+    samples = numpy.frombuffer(raw, dtype=numpy.int16).astype(numpy.float32)
+    boosted = numpy.clip(samples * gain, -32768, 32767).astype(numpy.int16)
+    return sr.AudioData(boosted.tobytes(), audio.sample_rate, audio.sample_width)
+
+
 def listen():
     with sr.Microphone() as source:
-        audio = recognizer.listen(source, phrase_time_limit=8)
+        recognizer.adjust_for_ambient_noise(source, duration=0.3)
+        try:
+            audio = recognizer.listen(source, timeout=8, phrase_time_limit=8)
+        except sr.WaitTimeoutError:
+            print("stt: no speech detected")
+            return None
+    audio = _boost_audio(audio)
     stt_start = time.time()
     try:
         text = recognizer.recognize_google(audio)
     except sr.UnknownValueError:
         text = None
-    except sr.RequestError:
+        print("stt: could not understand audio")
+    except sr.RequestError as e:
         text = None
+        print(f"stt: request error: {e}")
     print(f"timing: stt={time.time() - stt_start:.2f}s")
     return text
 
@@ -194,10 +214,12 @@ def handle_turn(text):
 
     say, face_name, action, remember = ask_gemini(text, extra)
     face.set_current(face_name)
+    action_thread = threading.Thread(target=perform_action, args=(action,), daemon=True)
+    action_thread.start()
     speak(say)
     if overlay:
         face.show_overlay(overlay, duration=6.0)
-    perform_action(action)
+    action_thread.join()
     history.append({"user": text, "momo": say})
     if len(history) > MAX_HISTORY:
         del history[0]
