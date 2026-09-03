@@ -1,0 +1,12 @@
+[Unit]
+Description=Momo WiFi connectivity check and hotspot fallback
+After=NetworkManager.service
+Before=momo-web.service momo-voice.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/python3 /home/castlers/momo/wifi_boot_check.py
+
+[Install]
+WantedBy=multi-user.target
