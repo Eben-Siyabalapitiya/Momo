@@ -267,7 +267,7 @@ def wave():
     servos.set_channel(bl_knee, bl_knee_home)
 
 
-SIT_KNEE_DIP = 90
+SIT_KNEE_DIP = 110
 
 
 def sit():
