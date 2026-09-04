@@ -168,12 +168,6 @@ PAGE = """
     </div>
 
     <div class="card">
-      <h2>Live Conversation</h2>
-      <p class="sub">Updates as you talk to Momo.</p>
-      <div id="transcriptList" class="transcript"></div>
-    </div>
-
-    <div class="card">
       <h2>Move</h2>
       <p class="sub">Each press runs 2 step cycles.</p>
       <div class="dpad">
@@ -187,6 +181,17 @@ PAGE = """
         <button class="btn" id="waveBtn" onclick="wave()">Wave</button>
         <button class="btn" id="sitBtn" onclick="sit()">Sit</button>
         <button class="btn" id="danceBtn" onclick="dance()">Dance</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Live Conversation with Momo</h2>
+      <div id="transcriptList" class="transcript"></div>
+      <div class="row" style="margin-top:0.8rem;">
+        <input type="text" id="chatInput" placeholder="Type a message..."
+               style="flex:1;background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.7rem;"
+               onkeydown="if(event.key==='Enter') sendChat();">
+        <button class="btn primary" onclick="sendChat()">Send</button>
       </div>
     </div>
 
@@ -365,14 +370,15 @@ async function refreshPowerStatus() {
 refreshPowerStatus();
 setInterval(refreshPowerStatus, 15000);
 
-let lastTranscriptLen = -1;
+let lastTranscriptKey = "";
 
 async function refreshTranscript() {
   try {
     const res = await fetch("/transcript");
     const turns = await res.json();
-    if (turns.length === lastTranscriptLen) return;
-    lastTranscriptLen = turns.length;
+    const key = JSON.stringify(turns);
+    if (key === lastTranscriptKey) return;
+    lastTranscriptKey = key;
     const list = document.getElementById("transcriptList");
     list.innerHTML = "";
     if (turns.length === 0) {
@@ -396,7 +402,21 @@ async function refreshTranscript() {
   } catch (e) {}
 }
 refreshTranscript();
-setInterval(refreshTranscript, 2500);
+setInterval(refreshTranscript, 1500);
+
+async function sendChat() {
+  const input = document.getElementById("chatInput");
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = "";
+  input.disabled = true;
+  try {
+    await post("/chat/send", {text: text});
+  } finally {
+    input.disabled = false;
+    input.focus();
+  }
+}
 
 async function post(url, body) {
   await fetch(url, {
@@ -751,6 +771,20 @@ def power_status():
 @app.route("/transcript")
 def transcript_route():
     return jsonify(get_transcript())
+
+
+CHAT_INBOX_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chat_inbox.json")
+
+
+@app.route("/chat/send", methods=["POST"])
+def chat_send():
+    data = request.get_json()
+    text = (data.get("text") or "").strip()
+    if not text:
+        return "", 400
+    with open(CHAT_INBOX_PATH, "w") as f:
+        json.dump({"text": text, "id": time.time()}, f)
+    return "", 204
 
 
 @app.route("/wifi/scan", methods=["POST"])
