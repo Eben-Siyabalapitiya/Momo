@@ -5,6 +5,7 @@ voice_settings.json
 persona.json
 transcript.json
 chat_inbox.json
+face_signal.json
 __pycache__/
 *.pyc
 .venv/

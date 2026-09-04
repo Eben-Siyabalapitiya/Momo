@@ -772,6 +772,7 @@ def save_persona():
 def home():
     for ch in range(8):
         servos.set_channel(ch, servos.get_startup(ch))
+    set_face("curious")
     return "", 204
 
 
@@ -791,6 +792,12 @@ def transcript_route():
 
 
 CHAT_INBOX_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chat_inbox.json")
+FACE_SIGNAL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "face_signal.json")
+
+
+def set_face(name):
+    with open(FACE_SIGNAL_PATH, "w") as f:
+        json.dump({"face": name, "id": time.time()}, f)
 
 
 @app.route("/chat/send", methods=["POST"])
@@ -838,6 +845,7 @@ def sit_route():
         return "", 409
     try:
         gait.sit()
+        set_face("posing")
     finally:
         gait_lock.release()
     return "", 204
@@ -849,6 +857,7 @@ def photo_pose_route():
         return "", 409
     try:
         gait.photo_pose()
+        set_face("posing")
     finally:
         gait_lock.release()
     return "", 204
