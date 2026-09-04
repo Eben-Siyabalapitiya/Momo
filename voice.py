@@ -31,6 +31,7 @@ session = requests.Session()
 MEMORY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "memory.json")
 TRANSCRIPT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "transcript.json")
 CHAT_INBOX_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chat_inbox.json")
+FACE_SIGNAL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "face_signal.json")
 MAX_HISTORY = 8
 
 turn_lock = threading.Lock()
@@ -300,6 +301,23 @@ def chat_inbox_loop():
             print("momo:", say, "|", face_name)
 
 
+def face_signal_loop():
+    last_id = None
+    while True:
+        time.sleep(0.5)
+        try:
+            with open(FACE_SIGNAL_PATH) as f:
+                data = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            continue
+        if data.get("id") == last_id:
+            continue
+        last_id = data.get("id")
+        face_name = data.get("face")
+        if face_name:
+            face.set_current(face_name)
+
+
 def run():
     load_memory()
     face.init()
@@ -312,6 +330,7 @@ def run():
     speak(greeting)
     face.set_current("curious")
     threading.Thread(target=chat_inbox_loop, daemon=True).start()
+    threading.Thread(target=face_signal_loop, daemon=True).start()
     try:
         while True:
             text = listen()
