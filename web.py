@@ -179,8 +179,16 @@ PAGE = """
       </div>
       <div class="actions" style="margin-top:1.1rem;">
         <button class="btn" id="waveBtn" onclick="wave()">Wave</button>
-        <button class="btn" id="sitBtn" onclick="sit()">Sit</button>
         <button class="btn" id="danceBtn" onclick="dance()">Dance</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Poses</h2>
+      <p class="sub">Holds the pose — won't return on its own, press Home to reset.</p>
+      <div class="actions">
+        <button class="btn" id="photoPoseBtn" onclick="photoPose()">Photo Pose</button>
+        <button class="btn" id="sitBtn" onclick="sit()">Sit</button>
       </div>
     </div>
 
@@ -534,6 +542,15 @@ async function sit() {
   btn.disabled = false;
 }
 
+async function photoPose() {
+  const btn = document.getElementById("photoPoseBtn");
+  btn.disabled = true;
+  btn.textContent = "Posing...";
+  await post("/photo_pose", {});
+  btn.disabled = false;
+  btn.textContent = "Photo Pose";
+}
+
 async function dance() {
   const btn = document.getElementById("danceBtn");
   btn.disabled = true;
@@ -821,6 +838,17 @@ def sit_route():
         return "", 409
     try:
         gait.sit()
+    finally:
+        gait_lock.release()
+    return "", 204
+
+
+@app.route("/photo_pose", methods=["POST"])
+def photo_pose_route():
+    if not gait_lock.acquire(blocking=False):
+        return "", 409
+    try:
+        gait.photo_pose()
     finally:
         gait_lock.release()
     return "", 204
