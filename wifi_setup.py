@@ -4,7 +4,7 @@ import subprocess
 import threading
 
 HOTSPOT_SSID = "Momo-Setup"
-HOTSPOT_PASSWORD = "momosetup123"
+HOTSPOT_PASSWORD = "momo1523"
 HOTSPOT_CON_NAME = "momo-setup-hotspot"
 
 STATUS_PATH = "/home/castlers/momo/wifi_status.json"
