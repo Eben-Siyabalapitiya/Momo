@@ -55,6 +55,7 @@ EXPR = {
     "worried":  {"w": 50, "h": 54, "color": (140, 180, 255), "lid": "sad", "r_lid": "sad"},
     "silly":    {"w": 64, "h": 30, "color": (255, 150, 200), "lid": None,
                  "r_dw": 10, "r_dh": 26},
+    "posing":   {"w": 66, "h": 66, "color": (70, 160, 255), "lid": None},
 }
 
 ENERGY = {
@@ -62,7 +63,7 @@ ENERGY = {
     "happy": 0.5, "curious": 0.5, "playful": 0.6, "determined": 0.75,
     "sneaky": 0.5, "proud": 0.55, "silly": 0.6,
     "neutral": 0.3, "confused": 0.4, "smug": 0.3, "bored": 0.2,
-    "shy": 0.25, "sad": 0.15, "dreamy": 0.15, "sleepy": 0.05, "worried": 0.35,
+    "shy": 0.25, "sad": 0.15, "dreamy": 0.15, "sleepy": 0.05, "worried": 0.35, "posing": 0.4,
 }
 
 cur = {"w": 60.0, "h": 62.0, "r": 80.0, "g": 220.0, "b": 235.0,
