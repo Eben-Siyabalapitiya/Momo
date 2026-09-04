@@ -30,7 +30,10 @@ session = requests.Session()
 
 MEMORY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "memory.json")
 TRANSCRIPT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "transcript.json")
+CHAT_INBOX_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chat_inbox.json")
 MAX_HISTORY = 8
+
+turn_lock = threading.Lock()
 
 VALID_FACES = {
     "neutral", "happy", "sad", "annoyed", "confused",
@@ -266,20 +269,43 @@ def handle_turn(text):
     return say, face_name
 
 
+def chat_inbox_loop():
+    last_id = None
+    while True:
+        time.sleep(1)
+        try:
+            with open(CHAT_INBOX_PATH) as f:
+                data = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            continue
+        if data.get("id") == last_id:
+            continue
+        last_id = data.get("id")
+        text = (data.get("text") or "").strip()
+        if not text:
+            continue
+        with turn_lock:
+            print("typed:", text)
+            say, face_name = handle_turn(text)
+            print("momo:", say, "|", face_name)
+
+
 def run():
     load_memory()
     face.init()
     face.set_current("curious")
     face.start_idle()
     calibrate_mic()
+    threading.Thread(target=chat_inbox_loop, daemon=True).start()
     try:
         while True:
             text = listen()
             if not text:
                 continue
-            print("heard:", text)
-            say, face_name = handle_turn(text)
-            print("momo:", say, "|", face_name)
+            with turn_lock:
+                print("heard:", text)
+                say, face_name = handle_turn(text)
+                print("momo:", say, "|", face_name)
     except KeyboardInterrupt:
         pass
     finally:
