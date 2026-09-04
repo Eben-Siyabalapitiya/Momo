@@ -7,6 +7,7 @@ Wants=network-online.target
 Type=simple
 User=castlers
 WorkingDirectory=/home/castlers/momo
+ExecStartPre=-/usr/bin/sudo systemctl stop momo-boot-splash.service
 ExecStart=/usr/bin/python3 -u /home/castlers/momo/voice.py
 Restart=on-failure
 RestartSec=5

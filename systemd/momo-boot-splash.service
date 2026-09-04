@@ -1,0 +1,13 @@
+[Unit]
+Description=Momo boot splash screen
+After=local-fs.target
+
+[Service]
+Type=simple
+User=castlers
+WorkingDirectory=/home/castlers/momo
+ExecStart=/usr/bin/python3 /home/castlers/momo/boot_splash.py
+Restart=no
+
+[Install]
+WantedBy=multi-user.target
