@@ -267,6 +267,31 @@ def wave():
     servos.set_channel(bl_knee, bl_knee_home)
 
 
+def photo_pose():
+    wave_knee = servos.LEGS[WAVE_LEG]["knee"]
+    dip_a_knee = servos.LEGS["FR"]["knee"]
+    dip_b_knee = servos.LEGS["BR"]["knee"]
+    bl_hip = servos.LEGS["BL"]["hip"]
+    bl_knee = servos.LEGS["BL"]["knee"]
+    wave_knee_home = servos.get_startup(wave_knee)
+    dip_a_home = servos.get_startup(dip_a_knee)
+    dip_b_home = servos.get_startup(dip_b_knee)
+    knee_high, knee_low = _wave_knee_targets(wave_knee_home)
+
+    for leg in servos.LEGS:
+        servos.set_channel(servos.LEGS[leg]["hip"], 90)
+    time.sleep(STEP_DELAY)
+
+    servos.set_channel(dip_a_knee, _dip_target(dip_a_home, WAVE_DIP_FR))
+    servos.set_channel(dip_b_knee, _dip_target(dip_b_home, WAVE_DIP_BR))
+    servos.set_channel(bl_hip, WAVE_BL_HIP)
+    servos.set_channel(bl_knee, WAVE_BL_KNEE)
+    time.sleep(STEP_DELAY)
+
+    servos.set_channel(wave_knee, knee_high)
+    time.sleep(STEP_DELAY)
+
+
 SIT_KNEE_DIP = 110
 
 
