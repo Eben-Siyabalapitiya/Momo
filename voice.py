@@ -54,6 +54,16 @@ EMPTY_REPLY_FALLBACKS = [
     "eh, can't do that one.",
 ]
 
+WAKEUP_GREETINGS = [
+    "finally awake, hey!",
+    "systems online, let's go.",
+    "okay I'm up, what's good.",
+    "booted and ready, hit me.",
+    "back online, miss me?",
+    "awake and annoyed about it, what's up.",
+    "alive again, barely.",
+]
+
 history = []
 facts = []
 
@@ -296,6 +306,11 @@ def run():
     face.set_current("curious")
     face.start_idle()
     calibrate_mic()
+    face.set_current("excited")
+    greeting = random.choice(WAKEUP_GREETINGS)
+    print("greeting:", greeting)
+    speak(greeting)
+    face.set_current("curious")
     threading.Thread(target=chat_inbox_loop, daemon=True).start()
     try:
         while True:
