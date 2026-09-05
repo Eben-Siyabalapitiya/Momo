@@ -775,7 +775,7 @@ def save_persona():
 
 @app.route("/home", methods=["POST"])
 def home():
-    servos.center_all()
+    servos.go_home()
     set_face("curious")
     return "", 204
 
