@@ -42,7 +42,7 @@ def _settle():
     for leg in servos.LEGS:
         servos.set_channel(servos.LEGS[leg]["hip"], 90)
         knee_ch = servos.LEGS[leg]["knee"]
-        servos.set_channel(knee_ch, 90)
+        servos.set_channel(knee_ch, servos.get_startup(knee_ch))
 
 
 def stand_tall():
@@ -260,11 +260,11 @@ def wave():
         time.sleep(WAVE_STEP_DELAY)
 
     servos.set_channel(wave_hip, 90)
-    servos.set_channel(wave_knee, 90)
-    servos.set_channel(dip_a_knee, 90)
-    servos.set_channel(dip_b_knee, 90)
+    servos.set_channel(wave_knee, wave_knee_home)
+    servos.set_channel(dip_a_knee, dip_a_home)
+    servos.set_channel(dip_b_knee, dip_b_home)
     servos.set_channel(bl_hip, 90)
-    servos.set_channel(bl_knee, 90)
+    servos.set_channel(bl_knee, bl_knee_home)
 
 
 def photo_pose():
@@ -309,7 +309,7 @@ def stand():
         hip_ch = servos.LEGS[leg]["hip"]
         knee_ch = servos.LEGS[leg]["knee"]
         servos.set_channel(hip_ch, 90)
-        servos.set_channel(knee_ch, 90)
+        servos.set_channel(knee_ch, servos.get_startup(knee_ch))
         time.sleep(STEP_DELAY)
 
 
