@@ -14,7 +14,7 @@ if os.path.exists(CONFIG_PATH):
     startup_angles.update(saved.get("startup_angles", {}))
 
 for _ch in range(8):
-    kit.servo[_ch].angle = startup_angles[str(_ch)]
+    kit.servo[_ch].angle = 90
 
 
 def save_config():
@@ -51,6 +51,11 @@ def release_channel(channel):
 def center_all(channels=range(8)):
     for ch in channels:
         set_channel(ch, 90)
+
+
+def go_zero():
+    for ch in range(8):
+        set_channel(ch, get_startup(ch))
 
 
 def release_all(channels=range(8)):
