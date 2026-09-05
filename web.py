@@ -180,6 +180,7 @@ PAGE = """
       <div class="actions" style="margin-top:1.1rem;">
         <button class="btn" id="waveBtn" onclick="wave()">Wave</button>
         <button class="btn" id="danceBtn" onclick="dance()">Dance</button>
+        <button class="btn" id="zeroBtn" onclick="goZero()">Zero</button>
       </div>
     </div>
 
@@ -517,6 +518,10 @@ function goHome() {
   post("/home", {});
 }
 
+function goZero() {
+  post("/zero", {});
+}
+
 async function turnNew(dir) {
   const btn = document.getElementById(dir === "left" ? "turnLeftNewBtn" : "turnRightNewBtn");
   btn.disabled = true;
@@ -770,8 +775,14 @@ def save_persona():
 
 @app.route("/home", methods=["POST"])
 def home():
-    for ch in range(8):
-        servos.set_channel(ch, servos.get_startup(ch))
+    servos.center_all()
+    set_face("curious")
+    return "", 204
+
+
+@app.route("/zero", methods=["POST"])
+def zero():
+    servos.go_zero()
     set_face("curious")
     return "", 204
 
