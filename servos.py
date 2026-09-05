@@ -6,6 +6,15 @@ CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.j
 
 kit = ServoKit(channels=16)
 
+LEGS = {
+    "FR": {"hip": 0, "knee": 1, "hip_sign": -1, "knee_sign": 1},
+    "BR": {"hip": 2, "knee": 3, "hip_sign": -1, "knee_sign": -1},
+    "FL": {"hip": 4, "knee": 5, "hip_sign": 1, "knee_sign": -1},
+    "BL": {"hip": 6, "knee": 7, "hip_sign": 1, "knee_sign": 1},
+}
+
+HIP_CHANNELS = {cfg["hip"] for cfg in LEGS.values()}
+
 startup_angles = {str(ch): 90 for ch in range(8)}
 
 if os.path.exists(CONFIG_PATH):
@@ -14,7 +23,7 @@ if os.path.exists(CONFIG_PATH):
     startup_angles.update(saved.get("startup_angles", {}))
 
 for _ch in range(8):
-    kit.servo[_ch].angle = 90
+    kit.servo[_ch].angle = 90 if _ch in HIP_CHANNELS else startup_angles[str(_ch)]
 
 
 def save_config():
@@ -53,6 +62,14 @@ def center_all(channels=range(8)):
         set_channel(ch, 90)
 
 
+def go_home():
+    for leg in LEGS:
+        hip_ch = LEGS[leg]["hip"]
+        knee_ch = LEGS[leg]["knee"]
+        set_channel(hip_ch, 90)
+        set_channel(knee_ch, get_startup(knee_ch))
+
+
 def go_zero():
     for ch in range(8):
         set_channel(ch, get_startup(ch))
@@ -61,14 +78,6 @@ def go_zero():
 def release_all(channels=range(8)):
     for ch in channels:
         release_channel(ch)
-
-
-LEGS = {
-    "FR": {"hip": 0, "knee": 1, "hip_sign": -1, "knee_sign": 1},
-    "BR": {"hip": 2, "knee": 3, "hip_sign": -1, "knee_sign": -1},
-    "FL": {"hip": 4, "knee": 5, "hip_sign": 1, "knee_sign": -1},
-    "BL": {"hip": 6, "knee": 7, "hip_sign": 1, "knee_sign": 1},
-}
 
 
 def set(leg, joint, angle):
