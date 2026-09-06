@@ -81,6 +81,15 @@ ZZZ_COUNT = 3
 SWEAT_COLOR = (120, 200, 255)
 SWEAT_CYCLE = 1.6
 
+SPARK_COLOR = (255, 235, 130)
+ANGER_COLOR = (255, 90, 70)
+DREAM_COLOR = (205, 195, 255)
+DREAM_CYCLE = 3.0
+DREAM_COUNT = 2
+GLINT_COLOR = (255, 255, 255)
+SLEEPY_Z_COLOR = (120, 145, 195)
+SLEEPY_Z_CYCLE = 3.2
+
 cur = {"w": 60.0, "h": 62.0, "r": 80.0, "g": 220.0, "b": 235.0,
        "r_dw": 0.0, "r_dh": 0.0, "ox": 0.0, "oy": 0.0}
 tgt = dict(cur)
@@ -161,6 +170,70 @@ def _draw_sweat(draw):
     draw.ellipse([x - size / 2, y - size, x + size / 2, y + size], fill=SWEAT_COLOR)
 
 
+def _draw_spark_burst(draw, base_cx, base_cy, base_r, count=6):
+    now = time.time()
+    pulse = 0.75 + 0.25 * math.sin(now * 4 + base_cx)
+    cx, cy, r = base_cx * SS, base_cy * SS, base_r * SS
+    for i in range(count):
+        ang = (2 * math.pi / count) * i + now * 1.2
+        x0 = cx + math.cos(ang) * r * 0.55
+        y0 = cy + math.sin(ang) * r * 0.55
+        x1 = cx + math.cos(ang) * r * pulse
+        y1 = cy + math.sin(ang) * r * pulse
+        draw.line([x0, y0, x1, y1], fill=SPARK_COLOR, width=max(1, int(2 * SS)))
+
+
+def _draw_anger_mark(draw):
+    jitter = random.uniform(-1, 1)
+    x = (EYE_R + 22 + cur["ox"] + jitter) * SS
+    y = (CY - 40 + cur["oy"]) * SS
+    s = 9 * SS
+    pts = [
+        (x, y),
+        (x + s * 0.5, y + s * 0.6),
+        (x + s * 0.15, y + s * 0.6),
+        (x + s * 0.6, y + s * 1.2),
+    ]
+    draw.line(pts, fill=ANGER_COLOR, width=max(2, int(2 * SS)), joint="curve")
+
+
+def _draw_dreamy_sparkles(draw):
+    now = time.time()
+    origin_x = EYE_R + 14 + cur["ox"]
+    origin_y = CY - 22 + cur["oy"]
+    step = DREAM_CYCLE / DREAM_COUNT
+    for i in range(DREAM_COUNT):
+        phase = ((now + i * step) % DREAM_CYCLE) / DREAM_CYCLE
+        alpha = math.sin(phase * math.pi)
+        if alpha <= 0.03:
+            continue
+        x = (origin_x + phase * 18) * SS
+        y = (origin_y - phase * 26) * SS
+        size = (3 + phase * 4) * SS
+        color = tuple(int(BG[c] + (DREAM_COLOR[c] - BG[c]) * alpha) for c in range(3))
+        draw.line([x - size, y, x + size, y], fill=color, width=max(1, int(SS)))
+        draw.line([x, y - size, x, y + size], fill=color, width=max(1, int(SS)))
+
+
+def _draw_glint(draw, base_cx, base_cy):
+    pulse = 0.6 + 0.4 * abs(math.sin(time.time() * 2))
+    r = 4 * SS * pulse
+    x, y = base_cx * SS, base_cy * SS
+    draw.line([x - r, y, x + r, y], fill=GLINT_COLOR, width=max(1, int(SS)))
+    draw.line([x, y - r, x, y + r], fill=GLINT_COLOR, width=max(1, int(SS)))
+
+
+def _draw_sleepy_z(draw):
+    phase = (time.time() % SLEEPY_Z_CYCLE) / SLEEPY_Z_CYCLE
+    alpha = math.sin(phase * math.pi)
+    if alpha <= 0.03:
+        return
+    x = EYE_R + 12 + cur["ox"] + phase * 16
+    y = CY - 18 + cur["oy"] - phase * 20
+    color = tuple(int(BG[c] + (SLEEPY_Z_COLOR[c] - BG[c]) * alpha) for c in range(3))
+    draw.text((x, y), "z", font=_font_tiny, fill=color)
+
+
 def _draw_sleep_face(draw):
     breathe = 1.0 + 0.08 * math.sin(time.time() * 1.1)
     r = 20 * breathe * SS
@@ -226,8 +299,21 @@ def _frame():
 
     if current_face in ("worried", "shy"):
         _draw_sweat(_hi_draw)
+    elif current_face in ("excited", "surprised"):
+        _draw_spark_burst(_hi_draw, EYE_L + cur["ox"], CY + cur["oy"], cur["w"] / 2 + 8)
+        _draw_spark_burst(_hi_draw, EYE_R + cur["ox"], CY + cur["oy"], w_r / 2 + 8)
+    elif current_face in ("annoyed", "determined"):
+        _draw_anger_mark(_hi_draw)
+    elif current_face == "dreamy":
+        _draw_dreamy_sparkles(_hi_draw)
+    elif current_face in ("proud", "smug"):
+        _draw_glint(_hi_draw, EYE_L + cur["ox"] - cur["w"] / 4, CY + cur["oy"] - cur["h"] / 4)
 
     small = _hi_img.reduce(SS)
+
+    if current_face == "sleepy":
+        _draw_sleepy_z(ImageDraw.Draw(small))
+
     _push_frame(small)
 
 
