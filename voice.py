@@ -335,6 +335,11 @@ def boredom_loop():
         next_gap = random.uniform(BOREDOM_MIN_GAP, BOREDOM_MAX_GAP)
 
 
+def _revert_face_preview(name):
+    if face.current_face == name:
+        face.set_current("posing")
+
+
 def face_signal_loop():
     last_id = None
     while True:
@@ -350,6 +355,7 @@ def face_signal_loop():
         face_name = data.get("face")
         if face_name:
             face.set_current(face_name)
+            threading.Timer(5.0, _revert_face_preview, args=(face_name,)).start()
 
 
 def run():
