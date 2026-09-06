@@ -8,6 +8,7 @@ import digitalio
 from flask import Flask, request, render_template_string, jsonify
 import servos
 import gait
+import face
 import voice_settings
 import persona
 import wifi_setup
@@ -190,6 +191,16 @@ PAGE = """
       <div class="actions">
         <button class="btn" id="photoPoseBtn" onclick="photoPose()">Photo Pose</button>
         <button class="btn" id="sitBtn" onclick="sit()">Sit</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Faces</h2>
+      <p class="sub">Preview any expression on the screen.</p>
+      <div class="actions">
+        {% for name in face_names %}
+        <button class="btn" onclick="previewFace('{{ name }}')">{{ name }}</button>
+        {% endfor %}
       </div>
     </div>
 
@@ -522,6 +533,10 @@ function goZero() {
   post("/zero", {});
 }
 
+function previewFace(name) {
+  post("/face/" + name, {});
+}
+
 async function turnNew(dir) {
   const btn = document.getElementById(dir === "left" ? "turnLeftNewBtn" : "turnRightNewBtn");
   btn.disabled = true;
@@ -695,8 +710,16 @@ def index():
     persona_prompt = persona.load()
     return render_template_string(
         PAGE, legs=LEGS_ORDER, groups=SIDE_GROUPS, startups=startups,
-        volume=settings["amplitude"], speed=settings["speed"], persona_prompt=persona_prompt
+        volume=settings["amplitude"], speed=settings["speed"], persona_prompt=persona_prompt,
+        face_names=sorted(face.EXPR.keys())
     )
+
+
+@app.route("/face/<name>", methods=["POST"])
+def face_preview(name):
+    if name in face.EXPR:
+        set_face(name)
+    return "", 204
 
 
 @app.route("/set", methods=["POST"])
