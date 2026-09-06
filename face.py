@@ -307,15 +307,13 @@ def _do_blink(kind):
 
 
 IDLE_BLUE = (70, 160, 255)
-IDLE_PINK = (230, 130, 190)
-IDLE_RED = (220, 70, 70)
-IDLE_COLOR_CHOICES = [IDLE_BLUE, IDLE_BLUE, IDLE_BLUE, IDLE_BLUE, IDLE_PINK, IDLE_RED]
+IDLE_COLOR_CHOICES = [IDLE_BLUE]
 
 IDLE_SHAPES = [
+    {"w": 66, "h": 66},
     {"w": 62, "h": 64},
-    {"w": 58, "h": 60},
-    {"w": 60, "h": 20, "lid": "angry"},
-    {"w": 60, "h": 56, "r_dw": -14, "r_dh": -30, "r_lid": "heavy"},
+    {"w": 64, "h": 60},
+    {"w": 66, "h": 62},
 ]
 
 
@@ -346,7 +344,7 @@ def _animate_loop():
 
             if was_speaking:
                 was_speaking = False
-                tgt["r"], tgt["g"], tgt["b"] = IDLE_BLUE
+                set_current("posing")
                 last_color = time.time()
                 next_color_gap = random.uniform(25.0, 45.0)
 
