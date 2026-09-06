@@ -1,4 +1,5 @@
 import time
+import math
 import random
 import threading
 import numpy
@@ -8,6 +9,7 @@ from PIL import Image, ImageDraw, ImageFont
 from adafruit_rgb_display import st7735
 
 W, H = 160, 128
+SS = 2
 BG = (8, 14, 36)
 CY = 64
 EYE_L = 40
@@ -17,9 +19,12 @@ FONT_PATH = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 
 _disp = None
 _img = None
-_draw = None
+_hi_img = None
+_hi_draw = None
 _font_big = None
 _font_small = None
+_font_mid = None
+_font_tiny = None
 
 current_face = "neutral"
 _running = False
@@ -56,6 +61,7 @@ EXPR = {
     "silly":    {"w": 64, "h": 30, "color": (255, 150, 200), "lid": None,
                  "r_dw": 10, "r_dh": 26},
     "posing":   {"w": 66, "h": 66, "color": (70, 160, 255), "lid": None},
+    "sleeping": {"w": 40, "h": 14, "color": (130, 155, 220), "lid": None},
 }
 
 ENERGY = {
@@ -64,7 +70,16 @@ ENERGY = {
     "sneaky": 0.5, "proud": 0.55, "silly": 0.6,
     "neutral": 0.3, "confused": 0.4, "smug": 0.3, "bored": 0.2,
     "shy": 0.25, "sad": 0.15, "dreamy": 0.15, "sleepy": 0.05, "worried": 0.35, "posing": 0.4,
+    "sleeping": 0.02,
 }
+
+SLEEP_EYE_COLOR = (140, 165, 225)
+ZZZ_COLOR = (190, 210, 255)
+ZZZ_CYCLE = 2.4
+ZZZ_COUNT = 3
+
+SWEAT_COLOR = (120, 200, 255)
+SWEAT_CYCLE = 1.6
 
 cur = {"w": 60.0, "h": 62.0, "r": 80.0, "g": 220.0, "b": 235.0,
        "r_dw": 0.0, "r_dh": 0.0, "ox": 0.0, "oy": 0.0}
@@ -76,7 +91,7 @@ _settle_until = 0.0
 
 
 def init():
-    global _disp, _font_big, _font_small
+    global _disp, _font_big, _font_small, _font_mid, _font_tiny
     cs_pin = digitalio.DigitalInOut(board.CE0)
     dc_pin = digitalio.DigitalInOut(board.D25)
     reset_pin = digitalio.DigitalInOut(board.D24)
@@ -96,19 +111,25 @@ def init():
     try:
         _font_big = ImageFont.truetype(FONT_PATH, 26)
         _font_small = ImageFont.truetype(FONT_PATH, 15)
+        _font_mid = ImageFont.truetype(FONT_PATH, 20)
+        _font_tiny = ImageFont.truetype(FONT_PATH, 12)
     except Exception:
         _font_big = ImageFont.load_default()
         _font_small = _font_big
+        _font_mid = _font_big
+        _font_tiny = _font_big
     return _disp
 
 
-def _cut_corner(draw, box, corner, depth_frac=0.5):
+def _cut_corner(draw, box, corner, depth_frac=0.5, pad=0):
     x0, y0, x1, y1 = box
     w, h = x1 - x0, y1 - y0
+    ext_x = w * depth_frac + pad
+    ext_y = h * depth_frac + pad
     if corner == "tl":
-        pts = [(x0, y0), (x0 + w * depth_frac, y0), (x0, y0 + h * depth_frac)]
+        pts = [(x0 - pad, y0 - pad), (x0 + ext_x, y0 - pad), (x0 - pad, y0 + ext_y)]
     elif corner == "tr":
-        pts = [(x1, y0), (x1 - w * depth_frac, y0), (x1, y0 + h * depth_frac)]
+        pts = [(x1 + pad, y0 - pad), (x1 - ext_x, y0 - pad), (x1 + pad, y0 + ext_y)]
     draw.polygon(pts, fill=BG)
 
 
@@ -118,29 +139,81 @@ def _lid_top(draw, box, frac):
 
 
 def _draw_eye(draw, cx, cy, w, h, color, lid, left):
-    h = max(3, h)
-    w = max(6, w)
+    cx, cy, w, h = cx * SS, cy * SS, w * SS, h * SS
+    h = max(3 * SS, h)
+    w = max(6 * SS, w)
     box = [cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2]
     radius = min(w, h) * 0.28
     draw.rounded_rectangle(box, radius=radius, fill=color)
     if lid == "sad":
-        _cut_corner(draw, box, "tl" if left else "tr")
+        _cut_corner(draw, box, "tl" if left else "tr", pad=radius * 0.6)
     elif lid == "angry":
-        _cut_corner(draw, box, "tr" if left else "tl")
+        _cut_corner(draw, box, "tr" if left else "tl", pad=radius * 0.6)
     elif lid == "heavy":
         _lid_top(draw, box, 0.45)
 
 
+def _draw_sweat(draw):
+    phase = (time.time() % SWEAT_CYCLE) / SWEAT_CYCLE
+    size = (5 + 3 * math.sin(phase * math.pi)) * SS
+    x = (EYE_R + 30 + cur["ox"]) * SS
+    y = (CY - 36 + cur["oy"] + phase * 30) * SS
+    draw.ellipse([x - size / 2, y - size, x + size / 2, y + size], fill=SWEAT_COLOR)
+
+
+def _draw_sleep_face(draw):
+    breathe = 1.0 + 0.08 * math.sin(time.time() * 1.1)
+    r = 20 * breathe * SS
+    for base_cx in (EYE_L + cur["ox"], EYE_R + cur["ox"]):
+        cx = base_cx * SS
+        cy = (CY + cur["oy"]) * SS
+        box = [cx - r, cy - r, cx + r, cy + r]
+        draw.arc(box, start=20, end=160, fill=SLEEP_EYE_COLOR, width=5 * SS)
+
+
+def _draw_zzz(draw):
+    now = time.time()
+    origin_x = EYE_R + 16 + cur["ox"]
+    origin_y = CY - 28 + cur["oy"]
+    step = ZZZ_CYCLE / ZZZ_COUNT
+    for i in range(ZZZ_COUNT):
+        phase = ((now + i * step) % ZZZ_CYCLE) / ZZZ_CYCLE
+        alpha = math.sin(phase * math.pi)
+        if alpha <= 0.03:
+            continue
+        x = origin_x + phase * 28
+        y = origin_y - phase * 36
+        if phase < 0.35:
+            font = _font_tiny
+        elif phase < 0.7:
+            font = _font_mid
+        else:
+            font = _font_big
+        color = tuple(int(BG[c] + (ZZZ_COLOR[c] - BG[c]) * alpha) for c in range(3))
+        draw.text((x, y), "Z", font=font, fill=color)
+
+
 def _frame():
-    global _img, _draw
-    if _img is None:
+    global _img, _hi_img, _hi_draw
+    if _hi_img is None:
+        _hi_img = Image.new("RGB", (W * SS, H * SS), BG)
+        _hi_draw = ImageDraw.Draw(_hi_img)
         _img = Image.new("RGB", (W, H), BG)
-        _draw = ImageDraw.Draw(_img)
-    _draw.rectangle([0, 0, W, H], fill=BG)
 
     if time.time() < _overlay_until:
-        _draw_overlay(_draw)
+        draw = ImageDraw.Draw(_img)
+        draw.rectangle([0, 0, W, H], fill=BG)
+        _draw_overlay(draw)
         _push_frame(_img)
+        return
+
+    _hi_draw.rectangle([0, 0, W * SS, H * SS], fill=BG)
+
+    if current_face == "sleeping":
+        _draw_sleep_face(_hi_draw)
+        small = _hi_img.reduce(SS)
+        _draw_zzz(ImageDraw.Draw(small))
+        _push_frame(small)
         return
 
     color = (int(cur["r"]), int(cur["g"]), int(cur["b"]))
@@ -148,10 +221,14 @@ def _frame():
     h_r = (cur["h"] + cur["r_dh"]) * (1 - blink_amt)
     w_r = cur["w"] + cur["r_dw"]
 
-    _draw_eye(_draw, EYE_L + cur["ox"], CY + cur["oy"], cur["w"], h_l, color, lid_L, True)
-    _draw_eye(_draw, EYE_R + cur["ox"], CY + cur["oy"], w_r, h_r, color, lid_R, False)
+    _draw_eye(_hi_draw, EYE_L + cur["ox"], CY + cur["oy"], cur["w"], h_l, color, lid_L, True)
+    _draw_eye(_hi_draw, EYE_R + cur["ox"], CY + cur["oy"], w_r, h_r, color, lid_R, False)
 
-    _push_frame(_img)
+    if current_face in ("worried", "shy"):
+        _draw_sweat(_hi_draw)
+
+    small = _hi_img.reduce(SS)
+    _push_frame(small)
 
 
 def _draw_overlay(draw):
@@ -207,11 +284,15 @@ def set_current(name):
     lid_R = spec.get("r_lid", spec.get("lid"))
     if ENERGY.get(prev, 0.3) > 0.7 and ENERGY.get(name, 0.3) < 0.5:
         _settle_until = time.time() + random.uniform(3.0, 5.0)
+    if name == "confused" and prev != "confused":
+        confused_wiggle()
+    elif name == "silly" and prev != "silly":
+        laugh()
 
 
 def _do_blink(kind):
     global blink_amt
-    if current_face == "sleepy":
+    if current_face in ("sleepy", "sleeping"):
         return
     if kind == "quick":
         steps = [(0.0, 0.02), (1.0, 0.03), (0.0, 0.04)]
@@ -288,10 +369,24 @@ def _animate_loop():
             if now - last_wander > next_wander_gap:
                 last_wander = now
                 amp = 10 if not settling else 5
-                tgt["ox"] = random.uniform(-amp, amp)
-                tgt["oy"] = random.uniform(-amp * 0.9, amp * 0.9)
+                new_ox = random.uniform(-amp, amp)
+                new_oy = random.uniform(-amp * 0.9, amp * 0.9)
+                base_w = tgt["w"]
+                base_r_dw = tgt["r_dw"]
+                tgt["ox"] = new_ox
+                tgt["oy"] = new_oy
+                if abs(new_ox) > amp * 0.65 and current_face != "sleeping":
+                    boost = 6
+                    if new_ox > 0:
+                        tgt["r_dw"] = base_r_dw + boost
+                    else:
+                        tgt["w"] = base_w + boost
                 next_wander_gap = random.uniform(1.8, 4.0)
-                threading.Timer(random.uniform(0.8, 1.6), lambda: tgt.update(ox=0.0, oy=0.0)).start()
+
+                def _wander_reset(bw=base_w, brdw=base_r_dw):
+                    tgt.update(ox=0.0, oy=0.0, w=bw, r_dw=brdw)
+
+                threading.Timer(random.uniform(0.8, 1.6), _wander_reset).start()
 
             if now - last_micro > next_micro_gap:
                 last_micro = now
@@ -360,6 +455,30 @@ def party_flash(duration=2.5):
             i += 1
             time.sleep(0.09)
         tgt["r"], tgt["g"], tgt["b"] = IDLE_BLUE
+
+    threading.Thread(target=_run, daemon=True).start()
+
+
+def laugh():
+    def _run():
+        end = time.time() + 0.5
+        base_oy = tgt["oy"]
+        while time.time() < end:
+            tgt["oy"] = base_oy + random.uniform(-5, 5)
+            time.sleep(0.04)
+        tgt["oy"] = base_oy
+
+    threading.Thread(target=_run, daemon=True).start()
+
+
+def confused_wiggle():
+    def _run():
+        end = time.time() + 0.5
+        base_ox = tgt["ox"]
+        while time.time() < end:
+            tgt["ox"] = base_ox + random.uniform(-20, 20)
+            time.sleep(0.04)
+        tgt["ox"] = base_ox
 
     threading.Thread(target=_run, daemon=True).start()
 
