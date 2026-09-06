@@ -65,8 +65,22 @@ WAKEUP_GREETINGS = [
     "alive again, barely.",
 ]
 
+BOREDOM_LINES = [
+    "are you ignoring me or what.",
+    "im bored, wanna talk?",
+    "hellooo, anyone there?",
+    "guess im just talking to myself now.",
+    "kinda quiet over there, everything good?",
+    "not gonna lie, im a little bored right now.",
+]
+
+BOREDOM_MIN_GAP = 180
+BOREDOM_MAX_GAP = 300
+
 history = []
 facts = []
+last_interaction = time.time()
+last_boredom_line = None
 
 
 def load_memory():
@@ -246,6 +260,8 @@ def perform_actions(actions):
 
 
 def handle_turn(text):
+    global last_interaction
+    last_interaction = time.time()
     turn_start = time.time()
     lowered = text.lower()
     extra = None
@@ -301,6 +317,24 @@ def chat_inbox_loop():
             print("momo:", say, "|", face_name)
 
 
+def boredom_loop():
+    global last_interaction, last_boredom_line
+    next_gap = random.uniform(BOREDOM_MIN_GAP, BOREDOM_MAX_GAP)
+    while True:
+        time.sleep(5)
+        if time.time() - last_interaction < next_gap:
+            continue
+        with turn_lock:
+            choices = [l for l in BOREDOM_LINES if l != last_boredom_line]
+            line = random.choice(choices or BOREDOM_LINES)
+            last_boredom_line = line
+            face.set_current("bored")
+            speak(line)
+            print("bored:", line)
+        last_interaction = time.time()
+        next_gap = random.uniform(BOREDOM_MIN_GAP, BOREDOM_MAX_GAP)
+
+
 def face_signal_loop():
     last_id = None
     while True:
@@ -319,18 +353,21 @@ def face_signal_loop():
 
 
 def run():
+    global last_interaction
     load_memory()
     face.init()
-    face.set_current("curious")
+    face.set_current("posing")
     face.start_idle()
     calibrate_mic()
     face.set_current("excited")
     greeting = random.choice(WAKEUP_GREETINGS)
     print("greeting:", greeting)
     speak(greeting)
-    face.set_current("curious")
+    face.set_current("posing")
+    last_interaction = time.time()
     threading.Thread(target=chat_inbox_loop, daemon=True).start()
     threading.Thread(target=face_signal_loop, daemon=True).start()
+    threading.Thread(target=boredom_loop, daemon=True).start()
     try:
         while True:
             text = listen()
