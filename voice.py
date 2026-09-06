@@ -40,7 +40,7 @@ VALID_FACES = {
     "neutral", "happy", "sad", "annoyed", "confused",
     "sleepy", "excited", "curious", "smug",
     "surprised", "playful", "bored", "shy", "dreamy", "alert",
-    "determined", "sneaky", "proud", "worried", "silly"
+    "determined", "sneaky", "proud", "worried", "silly", "sleeping"
 }
 
 VALID_ACTIONS = {"none", "wave", "walk", "walk_back", "turn_left", "turn_right", "dance", "sit", "stand"}
