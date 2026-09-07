@@ -259,6 +259,21 @@ def perform_actions(actions):
             pass
 
 
+def _weather_icon_kind(text):
+    t = text.lower()
+    if "thunder" in t or "storm" in t:
+        return "storm"
+    if "snow" in t or "sleet" in t or "ice" in t:
+        return "snow"
+    if "rain" in t or "drizzle" in t or "shower" in t:
+        return "rain"
+    if "cloud" in t or "overcast" in t or "fog" in t or "mist" in t:
+        return "cloud"
+    if "sun" in t or "clear" in t:
+        return "sun"
+    return "cloud"
+
+
 def handle_turn(text):
     global last_interaction
     last_interaction = time.time()
@@ -266,15 +281,20 @@ def handle_turn(text):
     lowered = text.lower()
     extra = None
     overlay = None
+    overlay_kind = "text"
+    overlay_data = None
     if any(k in lowered for k in TIME_KEYWORDS):
         now_str = datetime.datetime.now().strftime("%I:%M %p").lstrip("0")
         extra = f"The current time is {now_str}."
         overlay = ["Time", now_str]
+        overlay_kind = "time"
     elif any(k in lowered for k in WEATHER_KEYWORDS):
         weather = get_weather()
         if weather:
             extra = f"The current weather is: {weather}."
             overlay = ["Weather", weather]
+            overlay_kind = "weather"
+            overlay_data = {"icon": _weather_icon_kind(weather)}
 
     say, face_name, actions, show, remember = ask_gemini(text, extra)
     face.set_current(face_name)
@@ -283,7 +303,10 @@ def handle_turn(text):
     speak(say)
     display = overlay or ([show] if show else None)
     if display:
-        face.show_overlay(display, duration=6.0)
+        if overlay:
+            face.show_overlay(display, duration=6.0, kind=overlay_kind, data=overlay_data)
+        else:
+            face.show_overlay(display, duration=6.0)
     action_thread.join()
     history.append({"user": text, "momo": say})
     if len(history) > MAX_HISTORY:
