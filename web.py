@@ -193,10 +193,11 @@ PAGE = """
 
     <div class="card">
       <h2>Poses</h2>
-      <p class="sub">Holds the pose — won't return on its own, press Home to reset.</p>
+      <p class="sub">Holds the pose — won't return on its own, press Legs to 90° to reset.</p>
       <div class="actions">
         <button class="btn" id="photoPoseBtn" onclick="photoPose()">Photo Pose</button>
         <button class="btn" id="sitBtn" onclick="sit()">Sit</button>
+        <button class="btn" id="legsHomeBtn" onclick="goHome()">Legs to 90°</button>
       </div>
     </div>
 
