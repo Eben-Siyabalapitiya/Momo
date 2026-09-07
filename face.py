@@ -2,6 +2,7 @@ import time
 import math
 import random
 import threading
+import datetime
 import numpy
 import board
 import digitalio
@@ -31,6 +32,8 @@ _running = False
 _speaking = False
 _overlay_until = 0.0
 _overlay_lines = []
+_overlay_kind = "text"
+_overlay_data = {}
 
 EXPR = {
     "neutral":  {"w": 60, "h": 62, "color": (80, 220, 235), "lid": None},
@@ -217,10 +220,15 @@ def _frame():
         _img = Image.new("RGB", (W, H), BG)
 
     if time.time() < _overlay_until:
-        draw = ImageDraw.Draw(_img)
-        draw.rectangle([0, 0, W, H], fill=BG)
-        _draw_overlay(draw)
-        _push_frame(_img)
+        if _overlay_kind == "time":
+            _push_frame(_draw_time_overlay())
+        elif _overlay_kind == "weather":
+            _push_frame(_draw_weather_overlay())
+        else:
+            draw = ImageDraw.Draw(_img)
+            draw.rectangle([0, 0, W, H], fill=BG)
+            _draw_overlay(draw)
+            _push_frame(_img)
         return
 
     _hi_draw.rectangle([0, 0, W * SS, H * SS], fill=BG)
@@ -265,10 +273,123 @@ def _draw_overlay(draw):
         y += h + 6
 
 
-def show_overlay(lines, duration=5.0):
-    global _overlay_lines, _overlay_until
+def show_overlay(lines, duration=5.0, kind="text", data=None):
+    global _overlay_lines, _overlay_until, _overlay_kind, _overlay_data
     _overlay_lines = lines
     _overlay_until = time.time() + duration
+    _overlay_kind = kind
+    _overlay_data = data or {}
+
+
+def _draw_time_overlay():
+    _hi_draw.rectangle([0, 0, W * SS, H * SS], fill=BG)
+    now = datetime.datetime.now()
+    cx, cy, r = 60 * SS, 56 * SS, 34 * SS
+
+    _hi_draw.ellipse([cx - r, cy - r, cx + r, cy + r], outline=(90, 210, 255), width=int(3 * SS))
+    for i in range(12):
+        ang = math.radians(i * 30 - 90)
+        x0 = cx + math.cos(ang) * (r - 6 * SS)
+        y0 = cy + math.sin(ang) * (r - 6 * SS)
+        x1 = cx + math.cos(ang) * r
+        y1 = cy + math.sin(ang) * r
+        _hi_draw.line([x0, y0, x1, y1], fill=(90, 210, 255), width=int(SS))
+
+    hour_ang = math.radians((now.hour % 12 + now.minute / 60) * 30 - 90)
+    min_ang = math.radians(now.minute * 6 - 90)
+    sec_ang = math.radians(now.second * 6 - 90)
+    _hi_draw.line([cx, cy, cx + math.cos(hour_ang) * r * 0.5, cy + math.sin(hour_ang) * r * 0.5],
+                  fill=(255, 255, 255), width=int(3 * SS))
+    _hi_draw.line([cx, cy, cx + math.cos(min_ang) * r * 0.75, cy + math.sin(min_ang) * r * 0.75],
+                  fill=(255, 255, 255), width=int(2 * SS))
+    _hi_draw.line([cx, cy, cx + math.cos(sec_ang) * r * 0.85, cy + math.sin(sec_ang) * r * 0.85],
+                  fill=(255, 120, 120), width=int(SS))
+    _hi_draw.ellipse([cx - 3 * SS, cy - 3 * SS, cx + 3 * SS, cy + 3 * SS], fill=(255, 255, 255))
+
+    small = _hi_img.reduce(SS)
+    draw = ImageDraw.Draw(small)
+    time_str = now.strftime("%I:%M %p").lstrip("0")
+    bbox = draw.textbbox((0, 0), time_str, font=_font_mid)
+    w = bbox[2] - bbox[0]
+    draw.text(((W - w) / 2, 102), time_str, font=_font_mid, fill=(200, 230, 255))
+    return small
+
+
+def _draw_sun_icon(draw, cx, cy, r):
+    now = time.time()
+    draw.ellipse([cx - r * 0.55, cy - r * 0.55, cx + r * 0.55, cy + r * 0.55], fill=(255, 210, 90))
+    for i in range(8):
+        ang = math.radians(i * 45) + now * 0.6
+        x0 = cx + math.cos(ang) * r * 0.68
+        y0 = cy + math.sin(ang) * r * 0.68
+        x1 = cx + math.cos(ang) * r
+        y1 = cy + math.sin(ang) * r
+        draw.line([x0, y0, x1, y1], fill=(255, 210, 90), width=max(1, int(2 * SS)))
+
+
+def _draw_cloud_icon(draw, cx, cy, r):
+    drift = math.sin(time.time() * 0.8) * r * 0.08
+    cx += drift
+    draw.ellipse([cx - r * 0.55, cy - r * 0.15, cx + r * 0.05, cy + r * 0.45], fill=(210, 220, 235))
+    draw.ellipse([cx - r * 0.15, cy - r * 0.4, cx + r * 0.45, cy + r * 0.35], fill=(225, 232, 245))
+    draw.ellipse([cx + r * 0.15, cy - r * 0.1, cx + r * 0.7, cy + r * 0.45], fill=(210, 220, 235))
+
+
+def _draw_rain_icon(draw, cx, cy, r):
+    _draw_cloud_icon(draw, cx, cy - r * 0.2, r * 0.85)
+    now = time.time()
+    for i in range(4):
+        phase = (now * 2 + i * 0.5) % 1.0
+        x = cx - r * 0.4 + i * (r * 0.27)
+        y0 = cy + r * 0.2 + phase * r * 0.6
+        draw.line([x, y0, x - r * 0.06, y0 + r * 0.18], fill=(120, 180, 255), width=max(1, int(2 * SS)))
+
+
+def _draw_snow_icon(draw, cx, cy, r):
+    _draw_cloud_icon(draw, cx, cy - r * 0.2, r * 0.85)
+    now = time.time()
+    for i in range(4):
+        phase = (now * 0.8 + i * 0.5) % 1.0
+        x = cx - r * 0.4 + i * (r * 0.27) + math.sin(now * 2 + i) * 3
+        y0 = cy + r * 0.2 + phase * r * 0.6
+        draw.ellipse([x - 2, y0 - 2, x + 2, y0 + 2], fill=(230, 240, 255))
+
+
+def _draw_storm_icon(draw, cx, cy, r):
+    _draw_cloud_icon(draw, cx, cy - r * 0.2, r * 0.85)
+    flash = math.sin(time.time() * 6) > 0.7
+    color = (255, 235, 120) if flash else (200, 190, 90)
+    pts = [(cx - 4, cy + r * 0.15), (cx + 6, cy + r * 0.15), (cx - 2, cy + r * 0.5),
+           (cx + 8, cy + r * 0.5), (cx - 6, cy + r * 0.95)]
+    draw.line(pts, fill=color, width=max(1, int(2 * SS)))
+
+
+WEATHER_ICON_DRAW = {
+    "sun": _draw_sun_icon,
+    "cloud": _draw_cloud_icon,
+    "rain": _draw_rain_icon,
+    "snow": _draw_snow_icon,
+    "storm": _draw_storm_icon,
+}
+
+
+def _draw_weather_overlay():
+    _hi_draw.rectangle([0, 0, W * SS, H * SS], fill=BG)
+    kind = _overlay_data.get("icon", "cloud")
+    fn = WEATHER_ICON_DRAW.get(kind, _draw_cloud_icon)
+    cx, cy, r = (W / 2) * SS, (H / 2 - 14) * SS, 30 * SS
+    fn(_hi_draw, cx, cy, r)
+
+    small = _hi_img.reduce(SS)
+    draw = ImageDraw.Draw(small)
+    lines = _overlay_lines[1:] if len(_overlay_lines) > 1 else _overlay_lines
+    y = 100
+    for line in lines:
+        bbox = draw.textbbox((0, 0), line, font=_font_small)
+        w = bbox[2] - bbox[0]
+        draw.text(((W - w) / 2, y), line, font=_font_small, fill=(200, 225, 255))
+        y += 18
+    return small
 
 
 def _push_frame(img):
