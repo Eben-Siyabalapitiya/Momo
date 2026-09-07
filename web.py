@@ -170,7 +170,6 @@ PAGE = """
 
     <div class="card">
       <h2>Move</h2>
-      <p class="sub">Each press runs <span id="walkCyclesValue">2</span> step cycles.</p>
       <div class="dpad">
         <button class="dpad-btn dpad-up" id="dpadUp" onclick="move('forward')">&#9650;</button>
         <button class="dpad-btn dpad-left" id="dpadLeft" onclick="move('left')">&#9664;</button>
@@ -193,7 +192,6 @@ PAGE = """
 
     <div class="card">
       <h2>Poses</h2>
-      <p class="sub">Holds the pose — won't return on its own, press Legs to 90° to reset.</p>
       <div class="actions">
         <button class="btn" id="photoPoseBtn" onclick="photoPose()">Photo Pose</button>
         <button class="btn" id="sitBtn" onclick="sit()">Sit</button>
@@ -203,7 +201,6 @@ PAGE = """
 
     <div class="card">
       <h2>Faces</h2>
-      <p class="sub">Preview any expression on the screen.</p>
       <div class="actions">
         {% for name in face_names %}
         <button class="btn" onclick="previewFace('{{ name }}')">{{ name }}</button>
@@ -224,7 +221,6 @@ PAGE = """
 
     <div class="card">
       <h2>Voice</h2>
-      <p class="sub">Adjust and press Save to apply on Momo immediately. No restart needed.</p>
       <div class="row">
         <label>Volume</label>
         <input type="range" min="0" max="200" value="{{ volume }}" id="volumeSlider" oninput="onVolume(this.value)">
@@ -246,7 +242,6 @@ PAGE = """
 
     <div class="card">
       <h2>Testing</h2>
-      <p class="sub">Newer paired turning, for comparison against the one-leg-at-a-time version used above.</p>
       <div class="actions">
         <button class="btn" id="turnLeftNewBtn" onclick="turnNew('left')">Turn Left (New)</button>
         <button class="btn" id="turnRightNewBtn" onclick="turnNew('right')">Turn Right (New)</button>
@@ -257,7 +252,6 @@ PAGE = """
   <section id="tab-personality">
     <div class="card">
       <h2>System Prompt</h2>
-      <p class="sub">This is sent to Gemini before every message. Change how Momo thinks and talks here.</p>
       <textarea class="persona" id="personaText">{{ persona_prompt }}</textarea>
       <div class="save-row">
         <button class="btn primary" onclick="savePersona()">Save</button>
@@ -277,7 +271,6 @@ PAGE = """
 
     <div class="card">
       <h2>Connect to a Network</h2>
-      <p class="sub">Scan for nearby networks, or type a name directly.</p>
       <div class="actions" style="margin-bottom:0.9rem;">
         <button class="btn" onclick="scanWifi()" id="scanBtn">Scan Networks</button>
       </div>
@@ -529,7 +522,6 @@ let walkCycles = 2;
 
 function updateWalkCycles(val) {
   walkCycles = parseInt(val, 10);
-  document.getElementById("walkCyclesValue").textContent = walkCycles;
   document.getElementById("walkCyclesSliderValue").textContent = walkCycles;
 }
 
