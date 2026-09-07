@@ -70,8 +70,14 @@ PAGE = """
   }
   .shell { max-width: 640px; margin: 0 auto; padding: 2rem 1.4rem 4rem; }
   .brand { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.6rem; }
-  .brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent);
-                box-shadow: 0 0 10px var(--accent); }
+  .brand .eyes { display: flex; gap: 4px; }
+  .brand .eyes span { width: 7px; height: 9px; border-radius: 3px; background: var(--accent);
+                       box-shadow: 0 0 8px var(--accent); animation: brand-blink 4.5s infinite; }
+  .brand .eyes span:nth-child(2) { animation-delay: 0.12s; }
+  @keyframes brand-blink {
+    0%, 90%, 100% { transform: scaleY(1); }
+    94% { transform: scaleY(0.12); }
+  }
   .brand h1 { font-size: 1.1rem; font-weight: 600; margin: 0; letter-spacing: 0.01em; }
 
   nav.tabs { display: flex; gap: 0.4rem; margin-bottom: 1.8rem;
@@ -150,7 +156,7 @@ PAGE = """
 </head>
 <body>
 <div class="shell">
-  <div class="brand"><span class="dot"></span><h1>Momo</h1></div>
+  <div class="brand"><span class="eyes"><span></span><span></span></span><h1>Momo</h1></div>
 
   <nav class="tabs">
     <button class="tab-btn active" data-tab="control">Control</button>
