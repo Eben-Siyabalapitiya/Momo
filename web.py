@@ -170,13 +170,19 @@ PAGE = """
 
     <div class="card">
       <h2>Move</h2>
-      <p class="sub">Each press runs 2 step cycles.</p>
+      <p class="sub">Each press runs <span id="walkCyclesValue">2</span> step cycles.</p>
       <div class="dpad">
         <button class="dpad-btn dpad-up" id="dpadUp" onclick="move('forward')">&#9650;</button>
         <button class="dpad-btn dpad-left" id="dpadLeft" onclick="move('left')">&#9664;</button>
         <button class="dpad-btn dpad-center" onclick="goHome()">Home</button>
         <button class="dpad-btn dpad-right" id="dpadRight" onclick="move('right')">&#9654;</button>
         <button class="dpad-btn dpad-down" id="dpadDown" onclick="move('backward')">&#9660;</button>
+      </div>
+      <div class="row" style="margin-top:1rem; gap:0.6rem;">
+        <span class="sub" style="margin:0;">Steps</span>
+        <input type="range" id="walkCyclesSlider" min="1" max="10" value="2" step="1"
+               style="flex:1;" oninput="updateWalkCycles(this.value)">
+        <span class="sub" style="margin:0;" id="walkCyclesSliderValue">2</span>
       </div>
       <div class="actions" style="margin-top:1.1rem;">
         <button class="btn" id="waveBtn" onclick="wave()">Wave</button>
@@ -518,10 +524,18 @@ function allRelease() {
 const MOVE_ROUTES = {forward: "/walk", backward: "/walk_back", left: "/turn_left_old", right: "/turn_right_old"};
 const MOVE_BTNS = {forward: "dpadUp", backward: "dpadDown", left: "dpadLeft", right: "dpadRight"};
 
+let walkCycles = 2;
+
+function updateWalkCycles(val) {
+  walkCycles = parseInt(val, 10);
+  document.getElementById("walkCyclesValue").textContent = walkCycles;
+  document.getElementById("walkCyclesSliderValue").textContent = walkCycles;
+}
+
 async function move(dir) {
   const btn = document.getElementById(MOVE_BTNS[dir]);
   btn.disabled = true;
-  await post(MOVE_ROUTES[dir], {});
+  await post(MOVE_ROUTES[dir], {cycles: walkCycles});
   btn.disabled = false;
 }
 
@@ -952,12 +966,21 @@ def turn_right_old_route():
     return "", 204
 
 
+def _get_cycles(data, default=2):
+    try:
+        cycles = int(data.get("cycles", default))
+    except (TypeError, ValueError):
+        cycles = default
+    return max(1, min(10, cycles))
+
+
 @app.route("/walk", methods=["POST"])
 def walk():
+    cycles = _get_cycles(request.get_json(silent=True) or {})
     if not gait_lock.acquire(blocking=False):
         return "", 409
     try:
-        gait.walk_trot(2)
+        gait.walk_trot(cycles)
     finally:
         gait_lock.release()
     return "", 204
@@ -965,10 +988,11 @@ def walk():
 
 @app.route("/walk_back", methods=["POST"])
 def walk_back():
+    cycles = _get_cycles(request.get_json(silent=True) or {})
     if not gait_lock.acquire(blocking=False):
         return "", 409
     try:
-        gait.walk_backward(2)
+        gait.walk_backward(cycles)
     finally:
         gait_lock.release()
     return "", 204
