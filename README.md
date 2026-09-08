@@ -23,21 +23,25 @@ I started this as a personal project to learn about robotics, wiring, and buildi
 
 ## How the code is laid out
 
-- `voice.py` is the main program, it listens for speech, sends it to Gemini, gets a reply back, and speaks it while triggering whatever face or movement fits
-- `web.py` runs the Flask web control panel
-- `face.py` draws and animates the eyes on the screen
-- `gait.py` has all the walking, turning, waving, sitting, and posing logic
-- `servos.py` is the low level code that actually talks to the servo board
-- `persona.py` holds Momo's personality and how it's told to respond, editable live from the web panel
-- `voice_settings.py` stores the voice volume, speed, and pitch settings
-- `wifi_setup.py` and `wifi_boot_check.py` handle the WiFi hotspot fallback
-- `boot_splash.py` shows a "waking up" animation on the screen while everything else is starting
+Everything you actually need to build and run Momo lives in `core/`. Everything else in the repo is either testing scripts or deployment config, not code the robot needs to function.
+
+- `core/voice.py` is the main program, it listens for speech, sends it to Gemini, gets a reply back, and speaks it while triggering whatever face or movement fits
+- `core/web.py` runs the Flask web control panel
+- `core/face.py` draws and animates the eyes on the screen
+- `core/gait.py` has all the walking, turning, waving, sitting, and posing logic
+- `core/servos.py` is the low level code that actually talks to the servo board
+- `core/persona.py` holds Momo's personality and how it's told to respond, editable live from the web panel
+- `core/voice_settings.py` stores the voice volume, speed, and pitch settings
+- `core/wifi_setup.py` and `core/wifi_boot_check.py` handle the WiFi hotspot fallback
+- `core/boot_splash.py` shows a "waking up" animation on the screen while everything else is starting
 - `systemd/` has the service files that make everything start automatically when the Pi boots
 - `testing/` has the small scripts I used to test individual hardware pieces (screen, servos, mic) before writing the real code, see the README in there for details
 
 ## Setup
 
 This isn't really plug and play since it depends on my exact wiring, but if you're working from similar hardware, the systemd service files in `systemd/` show how everything is set up to run automatically, and the code itself is fairly straightforward to follow. You'll need your own Gemini API key in a `.env` file.
+
+On the actual Pi, the files inside `core/` all sit together in one flat folder rather than a subfolder, since they look for each other and for their saved data (memory, settings, calibration) right next to themselves. If you're setting this up yourself, just keep everything from `core/` together in whatever folder you point the systemd services at.
 
 ## License
 
