@@ -6,20 +6,45 @@ I started this as a personal project to learn about robotics, wiring, and buildi
 
 ## What it can do
 
-- Talks back when you speak to it, using Gemini for the actual replies and espeak for the voice
-- Has an animated face on a small screen instead of a plain readout, eyes that blink and look around on their own when idle
-- Walks forward and backward, turns, sits, waves, dances, and holds poses for photos
-- Has a web control panel you can open from your phone or laptop to control it manually, watch the live conversation, tweak its personality, or set up WiFi
-- If it can't find a known WiFi network, it makes its own hotspot so you can connect and give it a new one, useful if you bring it somewhere else
+- Talks back when you speak to it, using Gemini for the replies and espeak for the voice
+- Has an animated face with 23 expressions, and the eyes blink, drift around, and change shape on their own when nothing is happening
+- Walks forward and backward, turns, sits, stands, waves, dances, and holds a pose for photos
+- Handles more than one instruction at a time, so "sit down then stand back up" runs both moves in order
+- Shows things on the screen when you ask, including an analog clock for the time and an animated icon that matches the actual weather
+- Speaks up on its own if nobody has said anything to it for a few minutes
 - Remembers things you tell it between conversations
+- Has a web control panel you can open from your phone to drive it around, preview every face, watch the conversation live, rewrite its personality, or set up WiFi
+- Makes its own WiFi hotspot if it cannot find a known network, so you can set it up somewhere it has never been
+
+## How it works
+
+The same loop runs every time you say something.
+
+The microphone records through the `speech_recognition` library, and the audio gets boosted in software before it goes anywhere, since the raw signal off the mic is quiet. Google's speech API turns that into text. If the sentence mentions the time or the weather, the real values get looked up first and passed along as facts, so the answer is accurate instead of made up.
+
+That text goes to Gemini together with Momo's personality, its long term memory, and the last few exchanges. The part that ties the whole robot together is that Gemini has to reply in JSON rather than plain text:
+
+```json
+{
+  "say": "yeah nah, too lazy for that one",
+  "face": "smug",
+  "actions": ["sit", "stand"],
+  "show": null,
+  "remember": null
+}
+```
+
+One response decides five things at once: what to say out loud, which expression to switch to, which physical moves to run and in what order, whether to put anything on the screen, and whether anything from the conversation is worth keeping permanently. Everything gets checked on the way back in, so a face or an action that does not exist gets dropped instead of breaking anything.
+
+The expression changes, the legs start moving on a background thread, and the speech plays at the same time, so the movement and the talking overlap rather than queueing up one after the other.
 
 ## Hardware
 
 - Raspberry Pi Zero W
 - PCA9685 servo driver board, controlling 8 MG90S servos (2 per leg)
 - ST7735 1.8 inch SPI screen for the face
-- I2S mic and amp/speaker combo
-- Everything powered off a battery through a couple of UBECs
+- I2S microphone and a MAX98357A amplifier driving a small speaker
+- Everything powered off a battery through a couple of UBECs, one for the Pi and a separate one for the servos
 
 ## How the code is laid out
 
