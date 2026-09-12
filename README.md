@@ -1,5 +1,7 @@
 # Momo
 
+Built by Eben Siyabalapitiya.
+
 Momo is a four legged robot spider I built from scratch, running on a Raspberry Pi Zero W. It has a little screen for a face, it walks, and you can actually talk to it. It listens to you, sends what you said to Google's Gemini AI, and replies out loud with a personality I wrote for it, plus it can wave, walk, sit, dance, and pose for pictures.
 
 I started this as a personal project to learn about robotics, wiring, and building something that actually works end to end instead of just following a tutorial. Everything here was built piece by piece: WiFi, servos, the screen, the mic and speaker, then the AI on top.
@@ -67,6 +69,14 @@ Everything you actually need to build and run Momo lives in `core/`. Everything 
 This isn't really plug and play since it depends on my exact wiring, but if you're working from similar hardware, the systemd service files in `systemd/` show how everything is set up to run automatically, and the code itself is fairly straightforward to follow. You'll need your own Gemini API key in a `.env` file.
 
 On the actual Pi, the files inside `core/` all sit together in one flat folder rather than a subfolder, since they look for each other and for their saved data (memory, settings, calibration) right next to themselves. If you're setting this up yourself, just keep everything from `core/` together in whatever folder you point the systemd services at.
+
+## Author
+
+Built and maintained by Eben Siyabalapitiya.
+
+- Portfolio: https://ebensiyabalapitiya.site
+- GitHub: https://github.com/Eben-Siyabalapitiya
+- LinkedIn: https://www.linkedin.com/in/eben-siyabalapitiya/
 
 ## License
 
