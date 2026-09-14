@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Momo Bill of Materials</title>
+<meta name="description" content="Every part needed to build Momo, the voice controlled quadruped robot designed by Eben Siyabalapitiya.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+:root {
+  --ground: #0C0E12;
+  --surface: #12151B;
+  --raise: #181C23;
+  --line: #23272F;
+  --line-soft: #1A1E25;
+  --ink: #E7E6E2;
+  --ink-2: #BEBFBC;
+  --muted: #8B8F98;
+  --faint: #5E636D;
+  --accent: #4FC9BE;
+  --accent-ink: #0C0E12;
+  --eye: #46A0FF;
+  --warn: #E2A04A;
+  --rail-logic: #E8823A;
+  --rail-servo: #D9544A;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --step--1: 0.8125rem;
+  --step-0: 0.9375rem;
+  --step-1: 1.125rem;
+  --step-2: 1.5rem;
+  --step-3: 2.25rem;
+  --step-4: clamp(2.5rem, 5.5vw, 4.25rem);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { background: var(--ground); }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: var(--step-0);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { color: var(--ink); }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+
+.sheet {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: clamp(1.25rem, 3vw, 2.75rem);
+  display: grid;
+  grid-template-columns: minmax(260px, 300px) minmax(0, 1fr);
+  gap: clamp(1.5rem, 3vw, 3rem);
+  align-items: start;
+}
+
+.titleblock {
+  position: sticky;
+  top: 1.5rem;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.mark {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.eyes { display: flex; gap: 5px; }
+.eyes span {
+  width: 13px;
+  height: 15px;
+  border-radius: 4px;
+  background: var(--eye);
+  box-shadow: 0 0 12px rgba(70, 160, 255, 0.45);
+  transform-origin: center;
+  animation: blink 5.5s infinite;
+}
+.eyes span:nth-child(2) { animation-delay: 0.1s; }
+
+@keyframes blink {
+  0%, 93%, 100% { transform: scaleY(1); }
+  95.5% { transform: scaleY(0.12); }
+}
+
+.wordmark {
+  font-family: var(--display);
+  font-stretch: 125%;
+  font-weight: 800;
+  font-size: var(--step-1);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.photo {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.photo img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; }
+
+.tb {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.tb div {
+  padding: 0.7rem 0.85rem;
+  border-bottom: 1px solid var(--line-soft);
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.tb div:nth-child(odd) { border-right: 1px solid var(--line-soft); }
+.tb div.wide { grid-column: 1 / -1; border-right: 0; }
+.tb div.last { border-bottom: 0; }
+.tb dt, .label {
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.tb dd {
+  margin: 0;
+  font-size: var(--step--1);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.tb dd.mono { font-family: var(--mono); font-size: 0.78rem; }
+
+main { display: grid; gap: clamp(2.5rem, 5vw, 4rem); min-width: 0; }
+
+.lede { display: grid; gap: 0.9rem; max-width: 62ch; }
+.lede .label { color: var(--accent); }
+h1 {
+  margin: 0;
+  font-family: var(--display);
+  font-stretch: 118%;
+  font-weight: 800;
+  font-size: var(--step-4);
+  line-height: 0.98;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.lede p { margin: 0; color: var(--ink-2); font-size: var(--step-1); line-height: 1.5; }
+
+section { display: grid; gap: 1.25rem; min-width: 0; }
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--line);
+}
+h2 {
+  margin: 0;
+  font-family: var(--display);
+  font-stretch: 112%;
+  font-weight: 700;
+  font-size: var(--step-2);
+  letter-spacing: 0.005em;
+  text-wrap: balance;
+}
+.section-head .meta { font-family: var(--mono); font-size: var(--step--1); color: var(--muted); }
+
+.pending {
+  padding: 1.5rem;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: var(--step--1);
+}
+
+footer {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+}
+
+@media (max-width: 900px) {
+  .sheet { grid-template-columns: minmax(0, 1fr); }
+  .titleblock { position: static; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eyes span { animation: none; }
+}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <aside class="titleblock" aria-label="Document details">
+    <div class="mark">
+      <div class="eyes" aria-hidden="true"><span></span><span></span></div>
+      <span class="wordmark">Momo</span>
+    </div>
+
+    <figure class="photo">
+      <img src="../docs/momo.jpg" alt="Momo, a black four legged robot with two glowing blue eyes on its screen" width="1600" height="1200">
+    </figure>
+
+    <dl class="tb">
+      <div><dt>Document</dt><dd>Bill of materials</dd></div>
+      <div><dt>Revision</dt><dd class="mono">A</dd></div>
+      <div><dt>Date</dt><dd class="mono">2026-09-13</dd></div>
+      <div><dt>Build qty</dt><dd class="mono">1 robot</dd></div>
+      <div class="wide"><dt>Controller</dt><dd>Raspberry Pi Zero W</dd></div>
+      <div class="wide"><dt>Designed by</dt><dd>Eben Siyabalapitiya</dd></div>
+      <div class="wide last"><dt>Source</dt><dd class="mono"><a href="https://github.com/Eben-Siyabalapitiya/Momo">github.com/Eben-Siyabalapitiya/Momo</a></dd></div>
+    </dl>
+  </aside>
+
+  <main>
+    <header class="lede">
+      <span class="label">Voice controlled quadruped</span>
+      <h1>Bill of Materials</h1>
+      <p>Everything that goes into one Momo, grouped by what each part does. Quantities are for a single robot. Printed parts come from the Onshape model and are listed separately from what you buy.</p>
+    </header>
+
+    <section id="parts" aria-labelledby="parts-h">
+      <div class="section-head"><h2 id="parts-h">Parts</h2><span class="meta">Grouped by subsystem</span></div>
+      <div class="pending">Parts table in progress.</div>
+    </section>
+
+    <section id="power" aria-labelledby="power-h">
+      <div class="section-head"><h2 id="power-h">Power budget</h2><span class="meta">Per rail</span></div>
+      <div class="pending">Power budget in progress.</div>
+    </section>
+
+    <section id="buses" aria-labelledby="buses-h">
+      <div class="section-head"><h2 id="buses-h">Buses and pins</h2><span class="meta">Raspberry Pi header</span></div>
+      <div class="pending">Bus map in progress.</div>
+    </section>
+  </main>
+
+  <footer>
+    <span>Momo BOM, revision A</span>
+    <span>Designed by Eben Siyabalapitiya</span>
+  </footer>
+
+</div>
+</body>
+</html>
