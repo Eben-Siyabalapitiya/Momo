@@ -24,9 +24,16 @@
   --eye: #46A0FF;
   --warn: #E2A04A;
   --warn-soft: rgba(226, 160, 74, 0.1);
+  --good: #7BC47F;
+  --good-soft: rgba(123, 196, 127, 0.09);
   --rail-33: #E8823A;
   --rail-5: #D8B64C;
   --rail-6: #D9544A;
+  --bus-i2c: #46B394;
+  --bus-spi: #5B8FE0;
+  --bus-i2s: #9B7FD4;
+  --bus-ctl: #D17FB0;
+  --gnd: #6B707A;
   --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
   --body: "Archivo", "Helvetica Neue", Arial, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
@@ -185,6 +192,8 @@ h2 {
 }
 .section-head .meta { font-family: var(--mono); font-size: var(--step--1); color: var(--muted); }
 
+.section-note { margin: 0; color: var(--muted); font-size: var(--step--1); max-width: 72ch; }
+
 .summary {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -223,6 +232,7 @@ table.bom {
   border-collapse: collapse;
   font-size: var(--step--1);
 }
+table.bom.pins { min-width: 640px; }
 .bom th, .bom td {
   padding: 0.75rem 0.95rem;
   text-align: left;
@@ -240,6 +250,7 @@ table.bom {
   white-space: nowrap;
 }
 .bom .num { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bom .mono { font-family: var(--mono); white-space: nowrap; }
 
 .bom tr.group th {
   background: var(--raise);
@@ -266,7 +277,7 @@ table.bom {
 .bom td.part .name { color: var(--ink); font-weight: 600; font-size: var(--step-0); }
 .bom td.part .note { display: block; margin-top: 0.2rem; color: var(--muted); font-size: var(--step--1); line-height: 1.45; max-width: 44ch; }
 .bom td.spec { color: var(--ink-2); max-width: 30ch; }
-.bom td.muted-cell { color: var(--faint); }
+.muted-cell { color: var(--faint); }
 
 .tag {
   display: inline-flex;
@@ -281,9 +292,14 @@ table.bom {
   white-space: nowrap;
 }
 .tag .dot { width: 7px; height: 7px; border-radius: 2px; background: var(--faint); }
-.tag.r33 .dot { background: var(--rail-33); }
-.tag.r5 .dot { background: var(--rail-5); }
+.tag.r33 .dot, .tag.b-p33 .dot { background: var(--rail-33); }
+.tag.r5 .dot, .tag.b-p5 .dot { background: var(--rail-5); }
 .tag.r6 .dot { background: var(--rail-6); }
+.tag.b-i2c .dot { background: var(--bus-i2c); }
+.tag.b-spi .dot { background: var(--bus-spi); }
+.tag.b-i2s .dot { background: var(--bus-i2s); }
+.tag.b-ctl .dot { background: var(--bus-ctl); }
+.tag.b-gnd .dot { background: var(--gnd); }
 .tag.confirm { color: var(--warn); border-color: rgba(226, 160, 74, 0.35); background: var(--warn-soft); }
 .tag.paid { color: var(--accent); border-color: rgba(79, 201, 190, 0.35); background: var(--accent-soft); }
 
@@ -303,7 +319,145 @@ table.bom {
   color: var(--muted);
   font-size: var(--step--1);
 }
-.legend span { display: inline-flex; align-items: center; gap: 0.45rem; }
+.legend > span { display: inline-flex; align-items: center; gap: 0.45rem; }
+
+.rails { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+
+.rail {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: 1.15rem 1.25rem;
+  display: grid;
+  gap: 1.1rem;
+  align-content: start;
+  min-width: 0;
+}
+.rail[data-rail="5"] { --rc: var(--rail-5); }
+.rail[data-rail="6"] { --rc: var(--rail-6); }
+
+.rail-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
+.rail-head h3 {
+  margin: 0;
+  font-family: var(--display);
+  font-stretch: 112%;
+  font-weight: 700;
+  font-size: var(--step-1);
+}
+.rail-head .src { font-family: var(--mono); font-size: var(--step--2); color: var(--muted); }
+
+.chart { padding-top: 1.5rem; display: grid; gap: 0.4rem; }
+.track {
+  position: relative;
+  height: 34px;
+  border-radius: 5px;
+  background: var(--raise);
+}
+.bar { position: absolute; left: 0; top: 7px; height: 20px; border-radius: 3px; background: var(--rc); }
+.bar.peak { opacity: 0.26; }
+.rating { position: absolute; top: -4px; bottom: -4px; border-left: 2px dashed var(--ink-2); }
+.rating span {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 0;
+  transform: translateX(-50%);
+  font-family: var(--mono);
+  font-size: var(--step--2);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.axis { position: relative; height: 1.1rem; }
+.axis span {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-family: var(--mono);
+  font-size: var(--step--2);
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+.axis span:first-child { transform: none; }
+.axis span:last-child { transform: translateX(-100%); }
+
+.figs { display: flex; flex-wrap: wrap; gap: 0.5rem 1.75rem; }
+.fig { display: grid; gap: 0.1rem; }
+.fig .v { font-family: var(--mono); font-size: var(--step-1); font-variant-numeric: tabular-nums; }
+.fig .key { display: inline-flex; align-items: center; gap: 0.4rem; }
+.fig .swatch { width: 10px; height: 10px; border-radius: 2px; background: var(--rc); }
+.fig .swatch.peak { opacity: 0.35; }
+.fig .swatch.rate { background: none; border-left: 2px dashed var(--ink-2); border-radius: 0; width: 2px; }
+
+.loads { margin: 0; display: grid; border-top: 1px solid var(--line-soft); }
+.loads .row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 4.5rem 4.5rem;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: var(--step--1);
+  align-items: baseline;
+}
+.loads .row.head { color: var(--faint); font-family: var(--mono); font-size: var(--step--2); letter-spacing: 0.08em; text-transform: uppercase; }
+.loads .row .n { color: var(--ink-2); }
+.loads .row .m { font-family: var(--mono); text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); }
+
+.verdict {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: start;
+  padding: 0.75rem 0.9rem;
+  border-radius: 6px;
+  font-size: var(--step--1);
+  line-height: 1.5;
+}
+.verdict .flag { font-family: var(--mono); font-size: var(--step--2); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding-top: 0.12rem; white-space: nowrap; }
+.verdict.ok { background: var(--good-soft); color: var(--ink-2); }
+.verdict.ok .flag { color: var(--good); }
+.verdict.over { background: var(--warn-soft); color: var(--ink-2); }
+.verdict.over .flag { color: var(--warn); }
+
+.header-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: 1.25rem 1.25rem 1rem;
+}
+.header-board { width: max-content; margin: 0 auto; display: grid; gap: 0.6rem; }
+.header {
+  display: grid;
+  grid-template-columns: repeat(20, 30px);
+  grid-template-rows: 30px 30px;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 6px;
+  background: var(--ground);
+  border: 1px solid var(--line);
+}
+.pin {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 0.625rem;
+  font-variant-numeric: tabular-nums;
+  cursor: default;
+}
+.pin.first { border-radius: 5px; }
+.pin.used { border-color: transparent; color: #0C0E12; font-weight: 600; }
+.pin.used.b-p33 { background: var(--rail-33); }
+.pin.used.b-p5 { background: var(--rail-5); }
+.pin.used.b-gnd { background: var(--gnd); color: #E7E6E2; }
+.pin.used.b-i2c { background: var(--bus-i2c); }
+.pin.used.b-spi { background: var(--bus-spi); }
+.pin.used.b-i2s { background: var(--bus-i2s); }
+.pin.used.b-ctl { background: var(--bus-ctl); }
+.header-caption { display: flex; justify-content: space-between; gap: 1rem; font-family: var(--mono); font-size: var(--step--2); color: var(--faint); }
 
 .pending {
   padding: 1.5rem;
@@ -330,6 +484,7 @@ footer {
   .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .summary div:nth-child(2) { border-right: 0; }
   .summary div:nth-child(-n + 2) { border-bottom: 1px solid var(--line-soft); }
+  .rails { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (max-width: 900px) {
@@ -410,13 +565,45 @@ footer {
     </section>
 
     <section id="power" aria-labelledby="power-h">
-      <div class="section-head"><h2 id="power-h">Power budget</h2><span class="meta">Per rail</span></div>
-      <div class="pending">Power budget in progress.</div>
+      <div class="section-head"><h2 id="power-h">Power budget</h2><span class="meta">Typical and peak draw per rail</span></div>
+      <p class="section-note">Momo runs two separate supply rails so the servos can never pull the Pi down. Figures are typical values from each part's datasheet rather than measurements from this robot, and both UBECs are assumed to be rated at 3 A until confirmed.</p>
+      <div class="rails" id="rails"></div>
     </section>
 
     <section id="buses" aria-labelledby="buses-h">
-      <div class="section-head"><h2 id="buses-h">Buses and pins</h2><span class="meta">Raspberry Pi header</span></div>
-      <div class="pending">Bus map in progress.</div>
+      <div class="section-head"><h2 id="buses-h">Buses and pins</h2><span class="meta">40 pin header, as wired</span></div>
+      <p class="section-note">Every header pin Momo uses, coloured by the bus it belongs to. The board is drawn with the header along the top edge and pin 1 on the left. Hover or focus a pin to see where it goes.</p>
+
+      <div class="header-wrap">
+        <div class="header-board">
+          <div class="header" id="header" role="img" aria-label="Raspberry Pi 40 pin header with the pins Momo uses highlighted"></div>
+          <div class="header-caption"><span>Even pins, 2 to 40</span><span>Odd pins, 1 to 39</span></div>
+        </div>
+      </div>
+
+      <div class="legend">
+        <span><span class="tag b-p33"><span class="dot"></span>3.3 V</span></span>
+        <span><span class="tag b-p5"><span class="dot"></span>5 V</span></span>
+        <span><span class="tag b-gnd"><span class="dot"></span>Ground</span></span>
+        <span><span class="tag b-i2c"><span class="dot"></span>I2C</span> servo driver</span>
+        <span><span class="tag b-spi"><span class="dot"></span>SPI</span> display</span>
+        <span><span class="tag b-i2s"><span class="dot"></span>I2S</span> mic and amp</span>
+        <span><span class="tag b-ctl"><span class="dot"></span>GPIO</span> amp mute</span>
+      </div>
+
+      <div class="tablewrap">
+        <table class="bom pins" id="pins">
+          <thead>
+            <tr>
+              <th scope="col" class="num">Pin</th>
+              <th scope="col">GPIO</th>
+              <th scope="col">Signal</th>
+              <th scope="col">Bus</th>
+              <th scope="col">Goes to</th>
+            </tr>
+          </thead>
+        </table>
+      </div>
     </section>
   </main>
 
@@ -459,10 +646,83 @@ const PARTS = [
   { group: "hardware", ref: "H2", name: "Heat set inserts", note: "Only if your printed parts use them.", spec: "Size to confirm", via: ["Printed parts"], rail: null, qty: null, price: null, confirm: true }
 ];
 
+const RAILS = [
+  {
+    id: "5",
+    name: "5 V rail",
+    source: "PS1 UBEC, assumed 3 A",
+    rating: 3000,
+    loads: [
+      { name: "Raspberry Pi Zero W", typ: 150, peak: 350 },
+      { name: "MAX98357A amp, while speaking", typ: 150, peak: 800 },
+      { name: "ST7735 backlight, through 3.3 V", typ: 30, peak: 50 },
+      { name: "PCA9685 logic, through 3.3 V", typ: 10, peak: 10 },
+      { name: "I2S microphone, through 3.3 V", typ: 2, peak: 2 }
+    ],
+    okText: "Comfortable headroom. Even with the amp at full volume the Pi side peaks well under the UBEC rating.",
+    overText: ""
+  },
+  {
+    id: "6",
+    name: "6 V servo rail",
+    source: "PS2 UBEC, assumed 3 A",
+    rating: 3000,
+    loads: [
+      { name: "8 x MG90S, holding a pose", typ: 640, peak: 640 },
+      { name: "Extra draw while walking", typ: 560, peak: 3360 }
+    ],
+    okText: "",
+    overText: "Brief peaks when every leg moves at once go past a 3 A UBEC, which shows up as servos twitching or skipping mid step. A 5 A UBEC on this rail gives the headroom it needs."
+  }
+];
+
+const SCALE_MAX = 6000;
+const TICKS = [0, 1000, 2000, 3000, 4000, 5000, 6000];
+
+const HEADER = {
+  1: "3V3", 2: "5V", 3: "GPIO 2", 4: "5V", 5: "GPIO 3", 6: "GND", 7: "GPIO 4", 8: "GPIO 14", 9: "GND", 10: "GPIO 15",
+  11: "GPIO 17", 12: "GPIO 18", 13: "GPIO 27", 14: "GND", 15: "GPIO 22", 16: "GPIO 23", 17: "3V3", 18: "GPIO 24", 19: "GPIO 10", 20: "GND",
+  21: "GPIO 9", 22: "GPIO 25", 23: "GPIO 11", 24: "GPIO 8", 25: "GND", 26: "GPIO 7", 27: "ID_SD", 28: "ID_SC", 29: "GPIO 5", 30: "GND",
+  31: "GPIO 6", 32: "GPIO 12", 33: "GPIO 13", 34: "GND", 35: "GPIO 19", 36: "GPIO 16", 37: "GPIO 26", 38: "GPIO 20", 39: "GND", 40: "GPIO 21"
+};
+
+const BUS_NAMES = { p33: "3.3 V", p5: "5 V", gnd: "Ground", i2c: "I2C", spi: "SPI", i2s: "I2S", ctl: "GPIO" };
+const BUS_ORDER = ["p5", "p33", "gnd", "i2c", "spi", "i2s", "ctl"];
+
+const USED = {
+  2: { bus: "p5", signal: "5 V in", to: "PS1 UBEC output" },
+  4: { bus: "p5", signal: "5 V", to: "MAX98357A VIN", confirm: true },
+  1: { bus: "p33", signal: "3.3 V", to: "ST7735 VCC" },
+  17: { bus: "p33", signal: "3.3 V", to: "PCA9685 VCC" },
+  6: { bus: "gnd", signal: "Ground", to: "ST7735 GND" },
+  9: { bus: "gnd", signal: "Ground", to: "PCA9685 GND" },
+  14: { bus: "gnd", signal: "Ground", to: "Mic and amp GND", confirm: true },
+  3: { bus: "i2c", signal: "SDA", to: "PCA9685 SDA" },
+  5: { bus: "i2c", signal: "SCL", to: "PCA9685 SCL" },
+  23: { bus: "spi", signal: "SCLK", to: "ST7735 SCK" },
+  19: { bus: "spi", signal: "MOSI", to: "ST7735 SDA" },
+  24: { bus: "spi", signal: "CE0", to: "ST7735 CS" },
+  22: { bus: "spi", signal: "Data or command", to: "ST7735 DC" },
+  18: { bus: "spi", signal: "Reset", to: "ST7735 RES" },
+  12: { bus: "i2s", signal: "Bit clock", to: "Mic SCK and amp BCLK" },
+  35: { bus: "i2s", signal: "Word select", to: "Mic WS and amp LRC" },
+  38: { bus: "i2s", signal: "Data in", to: "Mic SD" },
+  40: { bus: "i2s", signal: "Data out", to: "Amp DIN" },
+  37: { bus: "ctl", signal: "Amp mute", to: "Amp SD" }
+};
+
 const cad = new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" });
 
 function esc(s) {
   return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+
+function amps(ma) {
+  return (ma / 1000).toFixed(2) + " A";
+}
+
+function pct(ma) {
+  return Math.min(100, (ma / SCALE_MAX) * 100);
 }
 
 function railTag(rail) {
@@ -475,7 +735,7 @@ function lineTotal(p) {
   return p.price == null || p.qty == null ? null : p.price * p.qty;
 }
 
-function render() {
+function renderParts() {
   const table = document.getElementById("bom");
   table.querySelectorAll("tbody, tfoot").forEach(n => n.remove());
 
@@ -528,7 +788,90 @@ function render() {
   document.getElementById("s-confirm").textContent = confirm;
 }
 
-render();
+function renderRails() {
+  const host = document.getElementById("rails");
+  host.innerHTML = "";
+
+  RAILS.forEach(r => {
+    const typ = r.loads.reduce((s, l) => s + l.typ, 0);
+    const peak = r.loads.reduce((s, l) => s + l.peak, 0);
+    const over = peak > r.rating;
+
+    const ticks = TICKS.map(t => '<span style="left:' + pct(t) + '%">' + (t / 1000) + " A</span>").join("");
+    const loads = r.loads.map(l =>
+      '<div class="row"><span class="n">' + esc(l.name) + '</span><span class="m">' + l.typ + '</span><span class="m">' + l.peak + "</span></div>"
+    ).join("");
+
+    const card = document.createElement("article");
+    card.className = "rail";
+    card.dataset.rail = r.id;
+    card.innerHTML =
+      '<div class="rail-head"><h3>' + esc(r.name) + '</h3><span class="src">' + esc(r.source) + "</span></div>" +
+      '<div class="chart" role="img" aria-label="' + esc(r.name) + ": typical " + amps(typ) + ", peak " + amps(peak) + ", rated " + amps(r.rating) + '">' +
+        '<div class="track">' +
+          '<div class="bar peak" style="width:' + pct(peak) + '%"></div>' +
+          '<div class="bar" style="width:' + pct(typ) + '%"></div>' +
+          '<div class="rating" style="left:' + pct(r.rating) + '%"><span>' + amps(r.rating) + " rated</span></div>" +
+        "</div>" +
+        '<div class="axis">' + ticks + "</div>" +
+      "</div>" +
+      '<div class="figs">' +
+        '<div class="fig"><span class="key label"><span class="swatch"></span>Typical</span><span class="v">' + amps(typ) + "</span></div>" +
+        '<div class="fig"><span class="key label"><span class="swatch peak"></span>Peak</span><span class="v">' + amps(peak) + "</span></div>" +
+        '<div class="fig"><span class="key label"><span class="swatch rate"></span>Headroom at peak</span><span class="v">' + (over ? "-" : "") + amps(Math.abs(r.rating - peak)) + "</span></div>" +
+      "</div>" +
+      '<div class="loads"><div class="row head"><span>Load</span><span class="m">Typ mA</span><span class="m">Peak mA</span></div>' + loads + "</div>" +
+      '<p class="verdict ' + (over ? "over" : "ok") + '"><span class="flag">' + (over ? "Over at peak" : "Within rating") + "</span><span>" + esc(over ? r.overText : r.okText) + "</span></p>";
+
+    host.appendChild(card);
+  });
+}
+
+function renderPins() {
+  const header = document.getElementById("header");
+  header.innerHTML = "";
+
+  for (let n = 1; n <= 40; n++) {
+    const used = USED[n];
+    const even = n % 2 === 0;
+    const col = Math.ceil(n / 2);
+    const el = document.createElement("span");
+    el.className = "pin" + (n === 1 ? " first" : "") + (used ? " used b-" + used.bus : "");
+    el.style.gridColumn = col;
+    el.style.gridRow = even ? 1 : 2;
+    el.textContent = n;
+    el.title = "Pin " + n + ", " + HEADER[n] + (used ? ", " + used.signal + " to " + used.to : ", unused");
+    if (used) el.tabIndex = 0;
+    header.appendChild(el);
+  }
+
+  const table = document.getElementById("pins");
+  table.querySelectorAll("tbody").forEach(n => n.remove());
+  const tbody = document.createElement("tbody");
+
+  const rows = Object.keys(USED).map(Number).sort((a, b) => {
+    const d = BUS_ORDER.indexOf(USED[a].bus) - BUS_ORDER.indexOf(USED[b].bus);
+    return d || a - b;
+  });
+
+  tbody.innerHTML = rows.map(n => {
+    const u = USED[n];
+    const status = u.confirm ? ' <span class="tag confirm">Confirm</span>' : "";
+    return "<tr>" +
+      '<td class="num">' + n + "</td>" +
+      '<td class="mono">' + esc(HEADER[n]) + "</td>" +
+      "<td>" + esc(u.signal) + "</td>" +
+      '<td><span class="tag b-' + u.bus + '"><span class="dot"></span>' + BUS_NAMES[u.bus] + "</span></td>" +
+      '<td><span class="stack">' + esc(u.to) + status + "</span></td>" +
+      "</tr>";
+  }).join("");
+
+  table.appendChild(tbody);
+}
+
+renderParts();
+renderRails();
+renderPins();
 </script>
 </body>
 </html>
