@@ -20,14 +20,17 @@
   --muted: #8B8F98;
   --faint: #5E636D;
   --accent: #4FC9BE;
-  --accent-ink: #0C0E12;
+  --accent-soft: rgba(79, 201, 190, 0.1);
   --eye: #46A0FF;
   --warn: #E2A04A;
-  --rail-logic: #E8823A;
-  --rail-servo: #D9544A;
+  --warn-soft: rgba(226, 160, 74, 0.1);
+  --rail-33: #E8823A;
+  --rail-5: #D8B64C;
+  --rail-6: #D9544A;
   --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
   --body: "Archivo", "Helvetica Neue", Arial, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --step--2: 0.6875rem;
   --step--1: 0.8125rem;
   --step-0: 0.9375rem;
   --step-1: 1.125rem;
@@ -57,7 +60,7 @@ a:hover { color: var(--ink); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
 
 .sheet {
-  max-width: 1320px;
+  max-width: 1360px;
   margin: 0 auto;
   padding: clamp(1.25rem, 3vw, 2.75rem);
   display: grid;
@@ -73,11 +76,7 @@ a:hover { color: var(--ink); }
   gap: 1.25rem;
 }
 
-.mark {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
+.mark { display: flex; align-items: center; gap: 0.75rem; }
 
 .eyes { display: flex; gap: 5px; }
 .eyes span {
@@ -134,7 +133,7 @@ a:hover { color: var(--ink); }
 .tb div.last { border-bottom: 0; }
 .tb dt, .label {
   font-family: var(--mono);
-  font-size: 0.6875rem;
+  font-size: var(--step--2);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--faint);
@@ -186,6 +185,126 @@ h2 {
 }
 .section-head .meta { font-family: var(--mono); font-size: var(--step--1); color: var(--muted); }
 
+.summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.summary div {
+  padding: 0.95rem 1.1rem;
+  display: grid;
+  gap: 0.3rem;
+  border-right: 1px solid var(--line-soft);
+  min-width: 0;
+}
+.summary div:last-child { border-right: 0; }
+.summary .value {
+  font-family: var(--mono);
+  font-size: var(--step-2);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.summary .value.warn { color: var(--warn); }
+.summary .hint { font-size: var(--step--2); color: var(--muted); font-family: var(--mono); }
+
+.tablewrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+table.bom {
+  width: 100%;
+  min-width: 920px;
+  border-collapse: collapse;
+  font-size: var(--step--1);
+}
+.bom th, .bom td {
+  padding: 0.75rem 0.95rem;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line-soft);
+}
+.bom thead th {
+  font-family: var(--mono);
+  font-size: var(--step--2);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+  background: var(--surface);
+  white-space: nowrap;
+}
+.bom .num { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.bom tr.group th {
+  background: var(--raise);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
+}
+.bom tr.group .gname {
+  font-family: var(--display);
+  font-stretch: 112%;
+  font-weight: 700;
+  font-size: var(--step--1);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.bom tr.group .gsum { font-family: var(--mono); font-weight: 500; color: var(--ink-2); font-size: var(--step--1); text-transform: none; letter-spacing: 0; }
+.bom tbody:first-of-type tr.group th { border-top: 0; }
+.bom tbody tr:not(.group):hover td { background: rgba(255, 255, 255, 0.015); }
+
+.bom td.ref { font-family: var(--mono); color: var(--muted); white-space: nowrap; }
+.bom td.part { min-width: 210px; }
+.bom td.part .name { color: var(--ink); font-weight: 600; font-size: var(--step-0); }
+.bom td.part .note { display: block; margin-top: 0.2rem; color: var(--muted); font-size: var(--step--1); line-height: 1.45; max-width: 44ch; }
+.bom td.spec { color: var(--ink-2); max-width: 30ch; }
+.bom td.muted-cell { color: var(--faint); }
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.12rem 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: var(--step--2);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.tag .dot { width: 7px; height: 7px; border-radius: 2px; background: var(--faint); }
+.tag.r33 .dot { background: var(--rail-33); }
+.tag.r5 .dot { background: var(--rail-5); }
+.tag.r6 .dot { background: var(--rail-6); }
+.tag.confirm { color: var(--warn); border-color: rgba(226, 160, 74, 0.35); background: var(--warn-soft); }
+.tag.paid { color: var(--accent); border-color: rgba(79, 201, 190, 0.35); background: var(--accent-soft); }
+
+.stack { display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; }
+
+.bom tfoot td {
+  border-bottom: 0;
+  border-top: 1px solid var(--line);
+  background: var(--raise);
+  font-weight: 600;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  color: var(--muted);
+  font-size: var(--step--1);
+}
+.legend span { display: inline-flex; align-items: center; gap: 0.45rem; }
+
 .pending {
   padding: 1.5rem;
   border: 1px dashed var(--line);
@@ -205,6 +324,12 @@ footer {
   color: var(--faint);
   font-family: var(--mono);
   font-size: 0.75rem;
+}
+
+@media (max-width: 1100px) {
+  .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .summary div:nth-child(2) { border-right: 0; }
+  .summary div:nth-child(-n + 2) { border-bottom: 1px solid var(--line-soft); }
 }
 
 @media (max-width: 900px) {
@@ -249,8 +374,39 @@ footer {
     </header>
 
     <section id="parts" aria-labelledby="parts-h">
-      <div class="section-head"><h2 id="parts-h">Parts</h2><span class="meta">Grouped by subsystem</span></div>
-      <div class="pending">Parts table in progress.</div>
+      <div class="section-head"><h2 id="parts-h">Parts</h2><span class="meta">Prices in CAD</span></div>
+
+      <div class="summary" aria-label="Totals">
+        <div><span class="label">Line items</span><span class="value" id="s-lines">0</span><span class="hint">distinct parts</span></div>
+        <div><span class="label">Units</span><span class="value" id="s-units">0</span><span class="hint">pieces to order</span></div>
+        <div><span class="label">Estimated cost</span><span class="value" id="s-cost">$0.00</span><span class="hint" id="s-cost-hint">priced items only</span></div>
+        <div><span class="label">To confirm</span><span class="value warn" id="s-confirm">0</span><span class="hint">specs not locked in</span></div>
+      </div>
+
+      <div class="tablewrap">
+        <table class="bom" id="bom">
+          <thead>
+            <tr>
+              <th scope="col">Ref</th>
+              <th scope="col">Part</th>
+              <th scope="col">Spec</th>
+              <th scope="col">Connects via</th>
+              <th scope="col">Rail</th>
+              <th scope="col" class="num">Qty</th>
+              <th scope="col" class="num">Unit</th>
+              <th scope="col" class="num">Line</th>
+            </tr>
+          </thead>
+        </table>
+      </div>
+
+      <div class="legend">
+        <span><span class="tag r33"><span class="dot"></span>3.3 V</span> logic from the Pi</span>
+        <span><span class="tag r5"><span class="dot"></span>5 V</span> UBEC into the Pi</span>
+        <span><span class="tag r6"><span class="dot"></span>6 V</span> servo rail</span>
+        <span><span class="tag paid">Paid</span> price from an actual order</span>
+        <span><span class="tag confirm">Confirm</span> check against your build</span>
+      </div>
     </section>
 
     <section id="power" aria-labelledby="power-h">
@@ -270,5 +426,109 @@ footer {
   </footer>
 
 </div>
+
+<script>
+const GROUPS = [
+  { id: "compute", name: "Compute" },
+  { id: "motion", name: "Motion" },
+  { id: "face", name: "Face" },
+  { id: "voice", name: "Voice" },
+  { id: "power", name: "Power" },
+  { id: "hardware", name: "Wiring and hardware" }
+];
+
+const PARTS = [
+  { group: "compute", ref: "U1", name: "Raspberry Pi Zero W", note: "Runs everything. A Zero 2 W drops in and is noticeably faster.", spec: "BCM2835, 512 MB RAM, 2.4 GHz WiFi", via: ["Host"], rail: "5", qty: 1, price: 20.00 },
+  { group: "compute", ref: "U1a", name: "microSD card", note: "Holds Raspberry Pi OS Lite and the code.", spec: "16 GB or larger, A1 rated", via: ["SD slot"], rail: null, qty: 1, price: 9.00 },
+
+  { group: "motion", ref: "U2", name: "PCA9685 servo driver", note: "Takes angle commands over I2C and drives all eight servos.", spec: "16 channel, 12 bit PWM", via: ["I2C 0x40"], rail: "33", qty: 1, price: 9.00 },
+  { group: "motion", ref: "M1-M8", name: "MG90S micro servo", note: "Two per leg. One at the hip, one at the knee.", spec: "Metal gear, 4.8 to 6 V", via: ["PWM ch 0-7"], rail: "6", qty: 8, price: 5.00 },
+
+  { group: "face", ref: "U3", name: "ST7735 TFT display", note: "The face. Every expression is drawn here.", spec: "1.8 in, 128 x 160, 16 bit colour", via: ["SPI0 CE0"], rail: "33", qty: 1, price: 10.00 },
+
+  { group: "voice", ref: "U4", name: "I2S MEMS microphone", note: "Must be I2S. Analogue and USB mics will not work with this setup.", spec: "Digital mono, I2S output", via: ["I2S in"], rail: "33", qty: 1, price: 7.00 },
+  { group: "voice", ref: "U5", name: "MAX98357A amplifier", note: "Shutdown pin on GPIO 26 keeps the speaker silent between replies.", spec: "I2S class D, 3.2 W into 4 ohm", via: ["I2S out", "GPIO 26"], rail: "5", qty: 1, price: 9.00 },
+  { group: "voice", ref: "LS1", name: "Cavity speaker, 2828", note: "The enclosed horn style sounds clearer than a bare driver.", spec: "28 x 28 mm, 4 ohm, 3 W", via: ["Amp output"], rail: null, qty: 1, price: 6.48, paid: true },
+
+  { group: "power", ref: "PS1", name: "UBEC, 5 V", note: "Feeds the Pi on its own so servo spikes never reach it.", spec: "5 V output, 3 A", via: ["5 V pin"], rail: "5", qty: 1, price: 8.00, confirm: true },
+  { group: "power", ref: "PS2", name: "UBEC, 6 V", note: "Feeds the servo rail through the driver V+ terminal.", spec: "6 V output, 3 A", via: ["V+ terminal"], rail: "6", qty: 1, price: 8.00, confirm: true },
+  { group: "power", ref: "BT1", name: "Battery", note: "Shared source for both UBECs. Confirm voltage and capacity.", spec: "To confirm", via: ["Both UBECs"], rail: null, qty: 1, price: null, confirm: true },
+
+  { group: "hardware", ref: "W1", name: "Jumper wires, female to female", note: "For the header to board connections.", spec: "20 cm, 40 pack", via: ["Header"], rail: null, qty: 1, price: 6.00 },
+  { group: "hardware", ref: "H1", name: "Screws", note: "Hold the frame, legs, and servo brackets together.", spec: "Sizes to confirm", via: ["Frame"], rail: null, qty: null, price: null, confirm: true },
+  { group: "hardware", ref: "H2", name: "Heat set inserts", note: "Only if your printed parts use them.", spec: "Size to confirm", via: ["Printed parts"], rail: null, qty: null, price: null, confirm: true }
+];
+
+const cad = new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" });
+
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+
+function railTag(rail) {
+  if (!rail) return '<span class="muted-cell">None</span>';
+  const label = rail === "33" ? "3.3 V" : rail + " V";
+  return '<span class="tag r' + rail + '"><span class="dot"></span>' + label + "</span>";
+}
+
+function lineTotal(p) {
+  return p.price == null || p.qty == null ? null : p.price * p.qty;
+}
+
+function render() {
+  const table = document.getElementById("bom");
+  table.querySelectorAll("tbody, tfoot").forEach(n => n.remove());
+
+  let lines = 0, units = 0, cost = 0, unpriced = 0, confirm = 0;
+
+  GROUPS.forEach(g => {
+    const rows = PARTS.filter(p => p.group === g.id);
+    if (!rows.length) return;
+
+    const groupCost = rows.reduce((sum, p) => sum + (lineTotal(p) || 0), 0);
+    const tbody = document.createElement("tbody");
+
+    let html = '<tr class="group"><th colspan="7" scope="rowgroup"><span class="gname">' + esc(g.name) + '</span></th>' +
+      '<th class="num"><span class="gsum">' + cad.format(groupCost) + "</span></th></tr>";
+
+    rows.forEach(p => {
+      lines++;
+      if (p.qty != null) units += p.qty;
+      const lt = lineTotal(p);
+      if (lt == null) unpriced++; else cost += lt;
+      if (p.confirm) confirm++;
+
+      const status = p.confirm ? '<span class="tag confirm">Confirm</span>' : (p.paid ? '<span class="tag paid">Paid</span>' : "");
+      const via = p.via.map(v => '<span class="tag">' + esc(v) + "</span>").join("");
+
+      html += "<tr>" +
+        '<td class="ref">' + esc(p.ref) + "</td>" +
+        '<td class="part"><span class="stack"><span class="name">' + esc(p.name) + "</span>" + status + '</span><span class="note">' + esc(p.note) + "</span></td>" +
+        '<td class="spec">' + esc(p.spec) + "</td>" +
+        '<td><span class="stack">' + via + "</span></td>" +
+        "<td>" + railTag(p.rail) + "</td>" +
+        '<td class="num">' + (p.qty == null ? '<span class="muted-cell">TBD</span>' : p.qty) + "</td>" +
+        '<td class="num">' + (p.price == null ? '<span class="muted-cell">TBD</span>' : cad.format(p.price)) + "</td>" +
+        '<td class="num">' + (lt == null ? '<span class="muted-cell">TBD</span>' : cad.format(lt)) + "</td>" +
+        "</tr>";
+    });
+
+    tbody.innerHTML = html;
+    table.appendChild(tbody);
+  });
+
+  const tfoot = document.createElement("tfoot");
+  tfoot.innerHTML = '<tr><td colspan="5">Estimated total, priced items</td><td class="num">' + units + '</td><td></td><td class="num">' + cad.format(cost) + "</td></tr>";
+  table.appendChild(tfoot);
+
+  document.getElementById("s-lines").textContent = lines;
+  document.getElementById("s-units").textContent = units;
+  document.getElementById("s-cost").textContent = cad.format(cost);
+  document.getElementById("s-cost-hint").textContent = unpriced ? unpriced + " items still unpriced" : "every item priced";
+  document.getElementById("s-confirm").textContent = confirm;
+}
+
+render();
+</script>
 </body>
 </html>
