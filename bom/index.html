@@ -49,6 +49,8 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+[hidden] { display: none !important; }
+
 html { background: var(--ground); }
 
 body {
@@ -340,7 +342,7 @@ table.bom.pins { min-width: 640px; }
 .price-field { display: inline-flex; align-items: center; gap: 0.15rem; }
 .price-field .cur { font-family: var(--mono); color: var(--faint); font-size: var(--step--1); }
 .price-input {
-  width: 5.6rem;
+  width: 4.75rem;
   padding: 0.22rem 0.4rem;
   border: 1px solid transparent;
   border-radius: 4px;
