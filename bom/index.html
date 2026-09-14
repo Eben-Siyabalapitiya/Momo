@@ -194,6 +194,63 @@ h2 {
 
 .section-note { margin: 0; color: var(--muted); font-size: var(--step--1); max-width: 72ch; }
 
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+  flex-wrap: wrap;
+}
+.toolbar .group-l, .toolbar .group-r { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+
+.stepper {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.stepper button {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  background: var(--raise);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 1rem;
+  cursor: pointer;
+}
+.stepper button:hover:not(:disabled) { background: #20252D; }
+.stepper button:disabled { color: var(--faint); cursor: not-allowed; }
+.stepper output {
+  min-width: 7.5rem;
+  display: grid;
+  place-items: center;
+  padding: 0 0.6rem;
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  font-variant-numeric: tabular-nums;
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+}
+
+.btn {
+  height: 34px;
+  padding: 0 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--raise);
+  color: var(--ink-2);
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn:hover { color: var(--ink); border-color: var(--faint); }
+.btn:active { transform: translateY(1px); }
+.btn.quiet { background: transparent; }
+
 .summary {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -228,7 +285,7 @@ h2 {
 
 table.bom {
   width: 100%;
-  min-width: 920px;
+  min-width: 940px;
   border-collapse: collapse;
   font-size: var(--step--1);
 }
@@ -277,7 +334,29 @@ table.bom.pins { min-width: 640px; }
 .bom td.part .name { color: var(--ink); font-weight: 600; font-size: var(--step-0); }
 .bom td.part .note { display: block; margin-top: 0.2rem; color: var(--muted); font-size: var(--step--1); line-height: 1.45; max-width: 44ch; }
 .bom td.spec { color: var(--ink-2); max-width: 30ch; }
+.bom td.price-cell { padding-top: 0.55rem; }
 .muted-cell { color: var(--faint); }
+
+.price-field { display: inline-flex; align-items: center; gap: 0.15rem; }
+.price-field .cur { font-family: var(--mono); color: var(--faint); font-size: var(--step--1); }
+.price-input {
+  width: 5.6rem;
+  padding: 0.22rem 0.4rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.price-input::-webkit-outer-spin-button, .price-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.price-input::placeholder { color: var(--faint); }
+.price-input:hover { border-color: var(--line); }
+.price-input:focus { outline: none; border-color: var(--accent); background: var(--ground); box-shadow: 0 0 0 3px var(--accent-soft); }
 
 .tag {
   display: inline-flex;
@@ -302,6 +381,7 @@ table.bom.pins { min-width: 640px; }
 .tag.b-gnd .dot { background: var(--gnd); }
 .tag.confirm { color: var(--warn); border-color: rgba(226, 160, 74, 0.35); background: var(--warn-soft); }
 .tag.paid { color: var(--accent); border-color: rgba(79, 201, 190, 0.35); background: var(--accent-soft); }
+.tag.edited { color: var(--ink-2); border-style: dashed; }
 
 .stack { display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; }
 
@@ -459,13 +539,22 @@ table.bom.pins { min-width: 640px; }
 .pin.used.b-ctl { background: var(--bus-ctl); }
 .header-caption { display: flex; justify-content: space-between; gap: 1rem; font-family: var(--mono); font-size: var(--step--2); color: var(--faint); }
 
-.pending {
-  padding: 1.5rem;
-  border: 1px dashed var(--line);
-  border-radius: 10px;
-  color: var(--muted);
+.toast {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  max-width: min(360px, calc(100vw - 2.5rem));
+  padding: 0.7rem 0.95rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--raise);
+  color: var(--ink);
   font-size: var(--step--1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  transform: translateY(0);
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
+.toast[hidden] { display: none !important; }
 
 footer {
   grid-column: 1 / -1;
@@ -494,6 +583,32 @@ footer {
 
 @media (prefers-reduced-motion: reduce) {
   .eyes span { animation: none; }
+  .toast { transition: none; }
+}
+
+@media print {
+  :root {
+    --ground: #FFFFFF;
+    --surface: #FFFFFF;
+    --raise: #F3F3F1;
+    --line: #CFCFCB;
+    --line-soft: #E4E4E0;
+    --ink: #111317;
+    --ink-2: #33363C;
+    --muted: #55595F;
+    --faint: #6E7278;
+  }
+  body { background: #FFFFFF; font-size: 10pt; }
+  .sheet { max-width: none; padding: 0; grid-template-columns: 220px minmax(0, 1fr); gap: 1.5rem; }
+  .titleblock { position: static; }
+  .eyes span { animation: none; box-shadow: none; }
+  .toolbar, .toast { display: none !important; }
+  .tablewrap, .header-wrap { overflow: visible; }
+  table.bom { min-width: 0; }
+  .bom tr, .rail, .verdict { break-inside: avoid; }
+  .price-input { border: 0; padding: 0; width: auto; color: #111317; }
+  a { color: #111317; }
+  section { break-inside: auto; }
 }
 </style>
 </head>
@@ -514,7 +629,7 @@ footer {
       <div><dt>Document</dt><dd>Bill of materials</dd></div>
       <div><dt>Revision</dt><dd class="mono">A</dd></div>
       <div><dt>Date</dt><dd class="mono">2026-09-13</dd></div>
-      <div><dt>Build qty</dt><dd class="mono">1 robot</dd></div>
+      <div><dt>Build qty</dt><dd class="mono" id="tb-build">1 robot</dd></div>
       <div class="wide"><dt>Controller</dt><dd>Raspberry Pi Zero W</dd></div>
       <div class="wide"><dt>Designed by</dt><dd>Eben Siyabalapitiya</dd></div>
       <div class="wide last"><dt>Source</dt><dd class="mono"><a href="https://github.com/Eben-Siyabalapitiya/Momo">github.com/Eben-Siyabalapitiya/Momo</a></dd></div>
@@ -525,11 +640,28 @@ footer {
     <header class="lede">
       <span class="label">Voice controlled quadruped</span>
       <h1>Bill of Materials</h1>
-      <p>Everything that goes into one Momo, grouped by what each part does. Quantities are for a single robot. Printed parts come from the Onshape model and are listed separately from what you buy.</p>
+      <p>Everything that goes into Momo, grouped by what each part does. Set how many robots you are building and the quantities and totals follow. Printed parts come from the Onshape model and are listed separately from what you buy.</p>
     </header>
 
     <section id="parts" aria-labelledby="parts-h">
-      <div class="section-head"><h2 id="parts-h">Parts</h2><span class="meta">Prices in CAD</span></div>
+      <div class="section-head"><h2 id="parts-h">Parts</h2><span class="meta">Prices in CAD, editable</span></div>
+
+      <div class="toolbar">
+        <div class="group-l">
+          <span class="label" id="build-label">Building</span>
+          <div class="stepper" role="group" aria-labelledby="build-label">
+            <button type="button" id="build-dec" aria-label="Build one fewer robot">-</button>
+            <output id="build-out" aria-live="polite">1 robot</output>
+            <button type="button" id="build-inc" aria-label="Build one more robot">+</button>
+          </div>
+        </div>
+        <div class="group-r">
+          <button type="button" class="btn" id="copy-csv">Copy CSV</button>
+          <button type="button" class="btn" id="copy-md">Copy Markdown</button>
+          <button type="button" class="btn" id="print">Print</button>
+          <button type="button" class="btn quiet" id="reset">Reset prices</button>
+        </div>
+      </div>
 
       <div class="summary" aria-label="Totals">
         <div><span class="label">Line items</span><span class="value" id="s-lines">0</span><span class="hint">distinct parts</span></div>
@@ -560,6 +692,7 @@ footer {
         <span><span class="tag r5"><span class="dot"></span>5 V</span> UBEC into the Pi</span>
         <span><span class="tag r6"><span class="dot"></span>6 V</span> servo rail</span>
         <span><span class="tag paid">Paid</span> price from an actual order</span>
+        <span><span class="tag edited">Edited</span> your own price, saved in this browser</span>
         <span><span class="tag confirm">Confirm</span> check against your build</span>
       </div>
     </section>
@@ -613,6 +746,8 @@ footer {
   </footer>
 
 </div>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script>
 const GROUPS = [
@@ -711,7 +846,35 @@ const USED = {
   37: { bus: "ctl", signal: "Amp mute", to: "Amp SD" }
 };
 
+const STORE_PRICES = "momo-bom-prices-v1";
+const STORE_BUILD = "momo-bom-build-v1";
+const BUILD_MIN = 1;
+const BUILD_MAX = 10;
+
 const cad = new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" });
+
+const state = { build: 1, prices: {} };
+
+function readStore(key, fallback) {
+  try {
+    const raw = window.localStorage.getItem(key);
+    return raw == null ? fallback : JSON.parse(raw);
+  } catch (e) {
+    return fallback;
+  }
+}
+
+function writeStore(key, value) {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {}
+}
+
+function clearStore(key) {
+  try {
+    window.localStorage.removeItem(key);
+  } catch (e) {}
+}
 
 function esc(s) {
   return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -725,51 +888,71 @@ function pct(ma) {
   return Math.min(100, (ma / SCALE_MAX) * 100);
 }
 
+function robots(n) {
+  return n + (n === 1 ? " robot" : " robots");
+}
+
+function railLabel(rail) {
+  if (!rail) return "None";
+  return rail === "33" ? "3.3 V" : rail + " V";
+}
+
 function railTag(rail) {
   if (!rail) return '<span class="muted-cell">None</span>';
-  const label = rail === "33" ? "3.3 V" : rail + " V";
-  return '<span class="tag r' + rail + '"><span class="dot"></span>' + label + "</span>";
+  return '<span class="tag r' + rail + '"><span class="dot"></span>' + railLabel(rail) + "</span>";
+}
+
+function unitPrice(p) {
+  return Object.prototype.hasOwnProperty.call(state.prices, p.ref) ? state.prices[p.ref] : p.price;
+}
+
+function isEdited(p) {
+  return Object.prototype.hasOwnProperty.call(state.prices, p.ref) && state.prices[p.ref] !== p.price;
+}
+
+function totalQty(p) {
+  return p.qty == null ? null : p.qty * state.build;
 }
 
 function lineTotal(p) {
-  return p.price == null || p.qty == null ? null : p.price * p.qty;
+  const u = unitPrice(p);
+  const q = totalQty(p);
+  return u == null || q == null ? null : u * q;
 }
 
-function renderParts() {
+function tbd() {
+  return '<span class="muted-cell">TBD</span>';
+}
+
+function buildParts() {
   const table = document.getElementById("bom");
   table.querySelectorAll("tbody, tfoot").forEach(n => n.remove());
-
-  let lines = 0, units = 0, cost = 0, unpriced = 0, confirm = 0;
 
   GROUPS.forEach(g => {
     const rows = PARTS.filter(p => p.group === g.id);
     if (!rows.length) return;
 
-    const groupCost = rows.reduce((sum, p) => sum + (lineTotal(p) || 0), 0);
     const tbody = document.createElement("tbody");
-
     let html = '<tr class="group"><th colspan="7" scope="rowgroup"><span class="gname">' + esc(g.name) + '</span></th>' +
-      '<th class="num"><span class="gsum">' + cad.format(groupCost) + "</span></th></tr>";
+      '<th class="num"><span class="gsum" data-gsum="' + g.id + '"></span></th></tr>';
 
     rows.forEach(p => {
-      lines++;
-      if (p.qty != null) units += p.qty;
-      const lt = lineTotal(p);
-      if (lt == null) unpriced++; else cost += lt;
-      if (p.confirm) confirm++;
-
-      const status = p.confirm ? '<span class="tag confirm">Confirm</span>' : (p.paid ? '<span class="tag paid">Paid</span>' : "");
       const via = p.via.map(v => '<span class="tag">' + esc(v) + "</span>").join("");
+      const confirm = p.confirm ? '<span class="tag confirm">Confirm</span>' : "";
+      const paid = p.paid ? '<span class="tag paid" data-paid="' + esc(p.ref) + '">Paid</span>' : "";
+      const edited = '<span class="tag edited" data-edited="' + esc(p.ref) + '" hidden>Edited</span>';
+      const inputId = "price-" + p.ref.replace(/[^A-Za-z0-9]/g, "");
 
       html += "<tr>" +
         '<td class="ref">' + esc(p.ref) + "</td>" +
-        '<td class="part"><span class="stack"><span class="name">' + esc(p.name) + "</span>" + status + '</span><span class="note">' + esc(p.note) + "</span></td>" +
+        '<td class="part"><span class="stack"><span class="name">' + esc(p.name) + "</span>" + confirm + paid + edited + '</span><span class="note">' + esc(p.note) + "</span></td>" +
         '<td class="spec">' + esc(p.spec) + "</td>" +
         '<td><span class="stack">' + via + "</span></td>" +
         "<td>" + railTag(p.rail) + "</td>" +
-        '<td class="num">' + (p.qty == null ? '<span class="muted-cell">TBD</span>' : p.qty) + "</td>" +
-        '<td class="num">' + (p.price == null ? '<span class="muted-cell">TBD</span>' : cad.format(p.price)) + "</td>" +
-        '<td class="num">' + (lt == null ? '<span class="muted-cell">TBD</span>' : cad.format(lt)) + "</td>" +
+        '<td class="num" data-qty="' + esc(p.ref) + '"></td>' +
+        '<td class="num price-cell"><label class="price-field"><span class="cur" aria-hidden="true">$</span>' +
+          '<input class="price-input" id="' + inputId + '" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Add" data-ref="' + esc(p.ref) + '" aria-label="Unit price for ' + esc(p.name) + ', CAD"></label></td>' +
+        '<td class="num" data-line="' + esc(p.ref) + '"></td>' +
         "</tr>";
     });
 
@@ -778,14 +961,65 @@ function renderParts() {
   });
 
   const tfoot = document.createElement("tfoot");
-  tfoot.innerHTML = '<tr><td colspan="5">Estimated total, priced items</td><td class="num">' + units + '</td><td></td><td class="num">' + cad.format(cost) + "</td></tr>";
+  tfoot.innerHTML = '<tr><td colspan="5" id="f-label">Estimated total, priced items</td><td class="num" id="f-units"></td><td></td><td class="num" id="f-cost"></td></tr>';
   table.appendChild(tfoot);
+
+  syncInputs();
+}
+
+function syncInputs() {
+  PARTS.forEach(p => {
+    const input = document.querySelector('.price-input[data-ref="' + CSS.escape(p.ref) + '"]');
+    if (!input) return;
+    const u = unitPrice(p);
+    input.value = u == null ? "" : u.toFixed(2);
+  });
+}
+
+function recalc() {
+  let lines = 0, units = 0, cost = 0, unpriced = 0, confirm = 0;
+  const groupCost = {};
+
+  PARTS.forEach(p => {
+    lines++;
+    const q = totalQty(p);
+    const lt = lineTotal(p);
+    if (q != null) units += q;
+    if (lt == null) unpriced++; else { cost += lt; groupCost[p.group] = (groupCost[p.group] || 0) + lt; }
+    if (p.confirm) confirm++;
+
+    const qCell = document.querySelector('[data-qty="' + CSS.escape(p.ref) + '"]');
+    if (qCell) qCell.innerHTML = q == null ? tbd() : q;
+
+    const lCell = document.querySelector('[data-line="' + CSS.escape(p.ref) + '"]');
+    if (lCell) lCell.innerHTML = lt == null ? tbd() : cad.format(lt);
+
+    const paid = document.querySelector('[data-paid="' + CSS.escape(p.ref) + '"]');
+    if (paid) paid.hidden = isEdited(p);
+
+    const edited = document.querySelector('[data-edited="' + CSS.escape(p.ref) + '"]');
+    if (edited) edited.hidden = !isEdited(p);
+  });
+
+  GROUPS.forEach(g => {
+    const el = document.querySelector('[data-gsum="' + g.id + '"]');
+    if (el) el.textContent = cad.format(groupCost[g.id] || 0);
+  });
+
+  document.getElementById("f-units").textContent = units;
+  document.getElementById("f-cost").textContent = cad.format(cost);
+  document.getElementById("f-label").textContent = "Estimated total for " + robots(state.build) + ", priced items";
 
   document.getElementById("s-lines").textContent = lines;
   document.getElementById("s-units").textContent = units;
   document.getElementById("s-cost").textContent = cad.format(cost);
   document.getElementById("s-cost-hint").textContent = unpriced ? unpriced + " items still unpriced" : "every item priced";
   document.getElementById("s-confirm").textContent = confirm;
+
+  document.getElementById("build-out").textContent = robots(state.build);
+  document.getElementById("tb-build").textContent = robots(state.build);
+  document.getElementById("build-dec").disabled = state.build <= BUILD_MIN;
+  document.getElementById("build-inc").disabled = state.build >= BUILD_MAX;
 }
 
 function renderRails() {
@@ -834,10 +1068,9 @@ function renderPins() {
   for (let n = 1; n <= 40; n++) {
     const used = USED[n];
     const even = n % 2 === 0;
-    const col = Math.ceil(n / 2);
     const el = document.createElement("span");
     el.className = "pin" + (n === 1 ? " first" : "") + (used ? " used b-" + used.bus : "");
-    el.style.gridColumn = col;
+    el.style.gridColumn = Math.ceil(n / 2);
     el.style.gridRow = even ? 1 : 2;
     el.textContent = n;
     el.title = "Pin " + n + ", " + HEADER[n] + (used ? ", " + used.signal + " to " + used.to : ", unused");
@@ -869,9 +1102,147 @@ function renderPins() {
   table.appendChild(tbody);
 }
 
-renderParts();
-renderRails();
-renderPins();
+function exportRows() {
+  return PARTS.map(p => {
+    const u = unitPrice(p);
+    const q = totalQty(p);
+    const lt = lineTotal(p);
+    return {
+      ref: p.ref,
+      part: p.name,
+      spec: p.spec,
+      via: p.via.join(", "),
+      rail: railLabel(p.rail),
+      qty: q == null ? "TBD" : String(q),
+      unit: u == null ? "TBD" : u.toFixed(2),
+      line: lt == null ? "TBD" : lt.toFixed(2),
+      status: p.confirm ? "Confirm" : (isEdited(p) ? "Edited" : (p.paid ? "Paid" : ""))
+    };
+  });
+}
+
+const EXPORT_COLS = [
+  ["ref", "Ref"], ["part", "Part"], ["spec", "Spec"], ["via", "Connects via"], ["rail", "Rail"],
+  ["qty", "Qty"], ["unit", "Unit CAD"], ["line", "Line CAD"], ["status", "Status"]
+];
+
+function toCSV() {
+  const cell = v => /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+  const head = EXPORT_COLS.map(c => c[1]).join(",");
+  const body = exportRows().map(r => EXPORT_COLS.map(c => cell(r[c[0]])).join(",")).join("\n");
+  return head + "\n" + body + "\n";
+}
+
+function toMarkdown() {
+  const cell = v => String(v).replace(/\|/g, "\\|");
+  const head = "| " + EXPORT_COLS.map(c => c[1]).join(" | ") + " |";
+  const rule = "| " + EXPORT_COLS.map(c => (c[0] === "qty" || c[0] === "unit" || c[0] === "line") ? "---:" : "---").join(" | ") + " |";
+  const body = exportRows().map(r => "| " + EXPORT_COLS.map(c => cell(r[c[0]])).join(" | ") + " |").join("\n");
+  const total = PARTS.reduce((s, p) => s + (lineTotal(p) || 0), 0);
+  return "Momo bill of materials, " + robots(state.build) + "\n\n" + head + "\n" + rule + "\n" + body + "\n\nEstimated total for priced items: " + cad.format(total) + "\n";
+}
+
+let toastTimer = null;
+
+function toast(message) {
+  const el = document.getElementById("toast");
+  el.textContent = message;
+  el.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.hidden = true; }, 2600);
+}
+
+async function copyText(text, label) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      toast(label + " copied to your clipboard");
+      return;
+    }
+  } catch (e) {}
+
+  try {
+    const area = document.createElement("textarea");
+    area.value = text;
+    area.setAttribute("readonly", "");
+    area.style.position = "fixed";
+    area.style.opacity = "0";
+    document.body.appendChild(area);
+    area.select();
+    const ok = document.execCommand("copy");
+    area.remove();
+    if (ok) { toast(label + " copied to your clipboard"); return; }
+  } catch (e) {}
+
+  toast("Your browser blocked copying. Select the table and copy it by hand instead.");
+}
+
+function setBuild(n) {
+  state.build = Math.max(BUILD_MIN, Math.min(BUILD_MAX, n));
+  writeStore(STORE_BUILD, state.build);
+  recalc();
+}
+
+function wire() {
+  document.getElementById("build-dec").addEventListener("click", () => setBuild(state.build - 1));
+  document.getElementById("build-inc").addEventListener("click", () => setBuild(state.build + 1));
+
+  document.getElementById("bom").addEventListener("input", e => {
+    const input = e.target.closest(".price-input");
+    if (!input) return;
+    const ref = input.dataset.ref;
+    const raw = input.value.trim();
+    const n = raw === "" ? null : Number(raw);
+    if (raw !== "" && (!isFinite(n) || n < 0)) return;
+    state.prices[ref] = n == null ? null : Math.round(n * 100) / 100;
+    writeStore(STORE_PRICES, state.prices);
+    recalc();
+  });
+
+  document.getElementById("bom").addEventListener("change", e => {
+    const input = e.target.closest(".price-input");
+    if (!input) return;
+    const p = PARTS.find(x => x.ref === input.dataset.ref);
+    const u = p ? unitPrice(p) : null;
+    input.value = u == null ? "" : u.toFixed(2);
+  });
+
+  document.getElementById("copy-csv").addEventListener("click", () => copyText(toCSV(), "CSV"));
+  document.getElementById("copy-md").addEventListener("click", () => copyText(toMarkdown(), "Markdown table"));
+  document.getElementById("print").addEventListener("click", () => window.print());
+
+  document.getElementById("reset").addEventListener("click", () => {
+    state.prices = {};
+    clearStore(STORE_PRICES);
+    syncInputs();
+    recalc();
+    toast("Prices reset to the listed estimates");
+  });
+}
+
+function init() {
+  const savedBuild = Number(readStore(STORE_BUILD, 1));
+  state.build = isFinite(savedBuild) ? Math.max(BUILD_MIN, Math.min(BUILD_MAX, Math.round(savedBuild))) : 1;
+
+  const savedPrices = readStore(STORE_PRICES, {});
+  state.prices = {};
+  if (savedPrices && typeof savedPrices === "object") {
+    PARTS.forEach(p => {
+      if (Object.prototype.hasOwnProperty.call(savedPrices, p.ref)) {
+        const v = savedPrices[p.ref];
+        if (v === null || (typeof v === "number" && isFinite(v) && v >= 0)) state.prices[p.ref] = v;
+      }
+    });
+  }
+
+  buildParts();
+  recalc();
+  renderRails();
+  renderPins();
+  wire();
+}
+
+init();
 </script>
 </body>
 </html>
