@@ -5,9 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Momo Bill of Materials</title>
 <meta name="description" content="Every part needed to build Momo, the voice controlled quadruped robot designed by Eben Siyabalapitiya.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <style>
 :root {
   --ground: #0C0E12;
@@ -18,9 +15,9 @@
   --ink: #E7E6E2;
   --ink-2: #BEBFBC;
   --muted: #8B8F98;
-  --faint: #5E636D;
-  --accent: #4FC9BE;
-  --accent-soft: rgba(79, 201, 190, 0.1);
+  --faint: #9299A4;
+  --accent: #8AB9EE;
+  --accent-soft: rgba(138, 185, 238, 0.08);
   --eye: #46A0FF;
   --warn: #E2A04A;
   --warn-soft: rgba(226, 160, 74, 0.1);
@@ -34,9 +31,9 @@
   --bus-i2s: #9B7FD4;
   --bus-ctl: #D17FB0;
   --gnd: #6B707A;
-  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
-  --body: "Archivo", "Helvetica Neue", Arial, sans-serif;
-  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --display: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --body: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --mono: var(--body);
   --step--2: 0.6875rem;
   --step--1: 0.8125rem;
   --step-0: 0.9375rem;
@@ -291,7 +288,6 @@ table.bom {
   border-collapse: collapse;
   font-size: var(--step--1);
 }
-table.bom.pins { min-width: 640px; }
 .bom th, .bom td {
   padding: 0.75rem 0.95rem;
   text-align: left;
@@ -373,14 +369,6 @@ table.bom.pins { min-width: 640px; }
   white-space: nowrap;
 }
 .tag .dot { width: 7px; height: 7px; border-radius: 2px; background: var(--faint); }
-.tag.r33 .dot, .tag.b-p33 .dot { background: var(--rail-33); }
-.tag.r5 .dot, .tag.b-p5 .dot { background: var(--rail-5); }
-.tag.r6 .dot { background: var(--rail-6); }
-.tag.b-i2c .dot { background: var(--bus-i2c); }
-.tag.b-spi .dot { background: var(--bus-spi); }
-.tag.b-i2s .dot { background: var(--bus-i2s); }
-.tag.b-ctl .dot { background: var(--bus-ctl); }
-.tag.b-gnd .dot { background: var(--gnd); }
 .tag.confirm { color: var(--warn); border-color: rgba(226, 160, 74, 0.35); background: var(--warn-soft); }
 .tag.paid { color: var(--accent); border-color: rgba(79, 201, 190, 0.35); background: var(--accent-soft); }
 .tag.edited { color: var(--ink-2); border-style: dashed; }
@@ -402,144 +390,6 @@ table.bom.pins { min-width: 640px; }
   font-size: var(--step--1);
 }
 .legend > span { display: inline-flex; align-items: center; gap: 0.45rem; }
-
-.rails { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
-
-.rail {
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--surface);
-  padding: 1.15rem 1.25rem;
-  display: grid;
-  gap: 1.1rem;
-  align-content: start;
-  min-width: 0;
-}
-.rail[data-rail="5"] { --rc: var(--rail-5); }
-.rail[data-rail="6"] { --rc: var(--rail-6); }
-
-.rail-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
-.rail-head h3 {
-  margin: 0;
-  font-family: var(--display);
-  font-stretch: 112%;
-  font-weight: 700;
-  font-size: var(--step-1);
-}
-.rail-head .src { font-family: var(--mono); font-size: var(--step--2); color: var(--muted); }
-
-.chart { padding-top: 1.5rem; display: grid; gap: 0.4rem; }
-.track {
-  position: relative;
-  height: 34px;
-  border-radius: 5px;
-  background: var(--raise);
-}
-.bar { position: absolute; left: 0; top: 7px; height: 20px; border-radius: 3px; background: var(--rc); }
-.bar.peak { opacity: 0.26; }
-.rating { position: absolute; top: -4px; bottom: -4px; border-left: 2px dashed var(--ink-2); }
-.rating span {
-  position: absolute;
-  bottom: calc(100% + 4px);
-  left: 0;
-  transform: translateX(-50%);
-  font-family: var(--mono);
-  font-size: var(--step--2);
-  color: var(--ink-2);
-  white-space: nowrap;
-}
-.axis { position: relative; height: 1.1rem; }
-.axis span {
-  position: absolute;
-  top: 0;
-  transform: translateX(-50%);
-  font-family: var(--mono);
-  font-size: var(--step--2);
-  color: var(--faint);
-  font-variant-numeric: tabular-nums;
-}
-.axis span:first-child { transform: none; }
-.axis span:last-child { transform: translateX(-100%); }
-
-.figs { display: flex; flex-wrap: wrap; gap: 0.5rem 1.75rem; }
-.fig { display: grid; gap: 0.1rem; }
-.fig .v { font-family: var(--mono); font-size: var(--step-1); font-variant-numeric: tabular-nums; }
-.fig .key { display: inline-flex; align-items: center; gap: 0.4rem; }
-.fig .swatch { width: 10px; height: 10px; border-radius: 2px; background: var(--rc); }
-.fig .swatch.peak { opacity: 0.35; }
-.fig .swatch.rate { background: none; border-left: 2px dashed var(--ink-2); border-radius: 0; width: 2px; }
-
-.loads { margin: 0; display: grid; border-top: 1px solid var(--line-soft); }
-.loads .row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 4.5rem 4.5rem;
-  gap: 0.75rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--line-soft);
-  font-size: var(--step--1);
-  align-items: baseline;
-}
-.loads .row.head { color: var(--faint); font-family: var(--mono); font-size: var(--step--2); letter-spacing: 0.08em; text-transform: uppercase; }
-.loads .row .n { color: var(--ink-2); }
-.loads .row .m { font-family: var(--mono); text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); }
-
-.verdict {
-  margin: 0;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 0.65rem;
-  align-items: start;
-  padding: 0.75rem 0.9rem;
-  border-radius: 6px;
-  font-size: var(--step--1);
-  line-height: 1.5;
-}
-.verdict .flag { font-family: var(--mono); font-size: var(--step--2); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding-top: 0.12rem; white-space: nowrap; }
-.verdict.ok { background: var(--good-soft); color: var(--ink-2); }
-.verdict.ok .flag { color: var(--good); }
-.verdict.over { background: var(--warn-soft); color: var(--ink-2); }
-.verdict.over .flag { color: var(--warn); }
-
-.header-wrap {
-  overflow-x: auto;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--surface);
-  padding: 1.25rem 1.25rem 1rem;
-}
-.header-board { width: max-content; margin: 0 auto; display: grid; gap: 0.6rem; }
-.header {
-  display: grid;
-  grid-template-columns: repeat(20, 30px);
-  grid-template-rows: 30px 30px;
-  gap: 6px;
-  padding: 8px;
-  border-radius: 6px;
-  background: var(--ground);
-  border: 1px solid var(--line);
-}
-.pin {
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  color: var(--faint);
-  font-family: var(--mono);
-  font-size: 0.625rem;
-  font-variant-numeric: tabular-nums;
-  cursor: default;
-}
-.pin.first { border-radius: 5px; }
-.pin.used { border-color: transparent; color: #0C0E12; font-weight: 600; }
-.pin.used.b-p33 { background: var(--rail-33); }
-.pin.used.b-p5 { background: var(--rail-5); }
-.pin.used.b-gnd { background: var(--gnd); color: #E7E6E2; }
-.pin.used.b-i2c { background: var(--bus-i2c); }
-.pin.used.b-spi { background: var(--bus-spi); }
-.pin.used.b-i2s { background: var(--bus-i2s); }
-.pin.used.b-ctl { background: var(--bus-ctl); }
-.header-caption { display: flex; justify-content: space-between; gap: 1rem; font-family: var(--mono); font-size: var(--step--2); color: var(--faint); }
 
 .toast {
   position: fixed;
@@ -575,7 +425,6 @@ footer {
   .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .summary div:nth-child(2) { border-right: 0; }
   .summary div:nth-child(-n + 2) { border-bottom: 1px solid var(--line-soft); }
-  .rails { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (max-width: 900px) {
@@ -607,46 +456,88 @@ footer {
   .toolbar, .toast { display: none !important; }
   .tablewrap, .header-wrap { overflow: visible; }
   table.bom { min-width: 0; }
-  .bom tr, .rail, .verdict { break-inside: avoid; }
+  .bom tr { break-inside: avoid; }
   .price-input { border: 0; padding: 0; width: auto; color: #111317; }
   a { color: #111317; }
   section { break-inside: auto; }
 }
+
+.sheet { display:block; max-width:1240px; padding:32px 40px 48px; }
+.titleblock { position:static; display:flex; justify-content:space-between; align-items:center; padding-bottom:24px; border-bottom:1px solid var(--line); margin-bottom:48px; }
+.wordmark { text-transform:none; letter-spacing:-.04em; font-stretch:normal; font-size:24px; font-weight:650; }
+.eyes span { width:11px; height:12px; box-shadow:none; animation:none; }
+.toplinks { display:flex; gap:24px; font-size:13px; align-items:center; }
+.toplinks a { color:var(--muted); text-decoration:none; }
+.toplinks a:hover { color:var(--ink); }
+main { gap:56px; }
+.lede { max-width:none; display:grid; grid-template-columns:1fr 280px; align-items:center; gap:56px; }
+.lede-copy { display:grid; gap:18px; max-width:610px; }
+.lede .photo { border-radius:12px; border:0; }
+.lede .label { color:var(--muted); }
+h1 { font-weight:550; font-stretch:normal; font-size:clamp(34px,4vw,48px); letter-spacing:-.045em; line-height:1.1; }
+.lede p { font-size:16px; line-height:1.65; color:var(--muted); }
+.byline { font-size:12px; color:var(--muted); }
+.label, .tb dt, .bom thead th { text-transform:none; letter-spacing:0; font-size:12px; }
+h2 { font-stretch:normal; font-size:23px; font-weight:550; letter-spacing:-.025em; }
+.section-head { padding-bottom:16px; }
+.section-head .meta { font-size:12px; }
+.summary { background:transparent; border:0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); border-radius:0; grid-template-columns:1fr 1fr 1.4fr; }
+.summary div { padding:22px 20px; gap:9px; }
+.summary div:first-child { padding-left:0; }
+.summary .value { font-size:29px; font-weight:500; letter-spacing:-.035em; }
+.summary .hint { font-size:12px; line-height:1.45; }
+.summary .value.warn { color:var(--ink); }
+.tablewrap { border-radius:8px; }
+table.bom { min-width:920px; font-size:13px; }
+.bom th, .bom td { padding:18px 14px; }
+.bom thead th { padding:14px; color:var(--muted); font-weight:500; }
+.bom td.part { min-width:220px; }
+.bom td.part .name { font-size:14px; font-weight:550; }
+.bom td.part .note { font-size:12px; max-width:34ch; margin-top:6px; }
+.bom td.spec { min-width:130px; font-size:12px; }
+.bom tr.group th { padding:12px 14px; background:#151920; }
+.bom tr.group .gname { text-transform:none; letter-spacing:0; font-stretch:normal; font-size:13px; font-weight:600; }
+.bom .tag { border:0; padding:0; background:transparent; font-size:11px; color:var(--muted); }
+.bom .tag .dot { width:5px; height:5px; }
+.bom .stack { gap:6px; }
+.price-input { width:76px; height:32px; font-size:13px; border:1px solid var(--line); background:var(--ground); padding:4px 8px; }
+.price-field .cur { display:none; }
+.bom td.price-cell { padding-top:13px; }
+.source-link { white-space:nowrap; font-size:12px; text-decoration:none; }
+.source-note { display:block; margin-top:5px; max-width:15ch; font-size:11px; color:var(--muted); line-height:1.5; }
+.pricing-note { margin:0; color:var(--muted); font-size:13px; line-height:1.7; max-width:82ch; }
+.pricing-note strong { color:var(--ink-2); font-weight:550; }
+.btn { font-size:12px; padding:8px 12px; border-radius:6px; }
+.legend { font-size:12px; }
+.power-context { display:grid; grid-template-columns:1fr 1fr; gap:32px; }
+.power-context article { display:grid; gap:10px; padding:22px 0; border-top:1px solid var(--line); }
+.power-context h3 { margin:0; font-weight:550; font-size:16px; }
+.power-context p { margin:0; color:var(--muted); font-size:14px; line-height:1.7; }
+.buildparts { display:grid; grid-template-columns:repeat(4,1fr); gap:0 24px; }
+.buildparts div { display:flex; justify-content:space-between; gap:16px; border-bottom:1px solid var(--line-soft); padding:13px 0; font-size:13px; }
+.buildparts span { color:var(--muted); }
+footer { margin-top:56px; padding-top:22px; border-top:1px solid var(--line); font-size:12px; }
+@media(max-width:760px) {
+ .sheet { padding:24px 20px; } .titleblock { margin-bottom:32px; } .toplinks { gap:16px; }
+ .lede { grid-template-columns:1fr; gap:24px; } .lede .photo { max-width:360px; } main { gap:40px; }
+ .summary { grid-template-columns:1fr 1fr; } .summary div:nth-child(2) { border:0; }
+ .summary div:last-child { grid-column:1/-1; padding-left:0; border-top:1px solid var(--line); }
+ .buildparts { grid-template-columns:1fr 1fr; } .power-context { grid-template-columns:1fr; gap:0; }
+}
+@media print { .sheet {max-width:none; padding:0;} .titleblock {margin-bottom:20px;} .lede {grid-template-columns:1fr 160px;} .toplinks {display:none;} .summary {display:grid;} .source-link {color:inherit;} .power-context p,.pricing-note,.lede p {color:#444;} table.bom {min-width:0;font-size:9px;} .bom td,.bom th {padding:7px;} .bom td.part {min-width:0;} .bom td.spec {min-width:0;} .price-input {width:55px;color:#111;background:white;} }
+
 </style>
 </head>
 <body>
 <div class="sheet">
 
-  <aside class="titleblock" aria-label="Document details">
-    <div class="mark">
-      <div class="eyes" aria-hidden="true"><span></span><span></span></div>
-      <span class="wordmark">Momo</span>
-    </div>
-
-    <figure class="photo">
-      <img src="../docs/momo.jpg" alt="Momo, a black four legged robot with two glowing blue eyes on its screen" width="1600" height="1200">
-    </figure>
-
-    <dl class="tb">
-      <div><dt>Document</dt><dd>Bill of materials</dd></div>
-      <div><dt>Revision</dt><dd class="mono">A</dd></div>
-      <div><dt>Date</dt><dd class="mono">2026-09-13</dd></div>
-      <div><dt>Build qty</dt><dd class="mono" id="tb-build">1 robot</dd></div>
-      <div class="wide"><dt>Controller</dt><dd>Raspberry Pi Zero W</dd></div>
-      <div class="wide"><dt>Designed by</dt><dd>Eben Siyabalapitiya</dd></div>
-      <div class="wide last"><dt>Source</dt><dd class="mono"><a href="https://github.com/Eben-Siyabalapitiya/Momo">github.com/Eben-Siyabalapitiya/Momo</a></dd></div>
-    </dl>
-  </aside>
+  <aside class="titleblock" aria-label="Momo navigation"><div class="mark"><div class="eyes" aria-hidden="true"><span></span><span></span></div><span class="wordmark">Momo</span></div><nav class="toplinks" aria-label="Sections"><a href="#parts">Parts list</a><a href="#printed">Printed parts</a><a href="https://github.com/Eben-Siyabalapitiya/Momo">GitHub ↗</a></nav></aside>
 
   <main>
-    <header class="lede">
-      <span class="label">Voice controlled quadruped</span>
-      <h1>Bill of Materials</h1>
-      <p>Everything that goes into Momo, grouped by what each part does. Set how many robots you are building and the quantities and totals follow. Printed parts come from the Onshape model and are listed separately from what you buy.</p>
-    </header>
+    <header class="lede"><div class="lede-copy"><span class="label">The Momo build</span><h1>Bill of materials</h1><p>The parts behind a small robot with a personality.<br>Source the materials, choose your quantities, and plan your build cost.</p><span class="byline">By Eben Siyabalapitiya · Revision B · September 14, 2026</span></div><figure class="photo"><img src="../docs/momo.jpg" alt="Momo with its blue screen eyes and four articulated legs" width="1600" height="1200"></figure></header>
 
     <section id="parts" aria-labelledby="parts-h">
-      <div class="section-head"><h2 id="parts-h">Parts</h2><span class="meta">Prices in CAD, editable</span></div>
+      <div class="section-head"><h2 id="parts-h">Parts</h2><span class="meta">Amazon Canada · CAD</span></div>
 
       <div class="toolbar">
         <div class="group-l">
@@ -665,13 +556,8 @@ footer {
         </div>
       </div>
 
-      <div class="summary" aria-label="Totals">
-        <div><span class="label">Line items</span><span class="value" id="s-lines">0</span><span class="hint">distinct parts</span></div>
-        <div><span class="label">Units</span><span class="value" id="s-units">0</span><span class="hint">pieces to order</span></div>
-        <div><span class="label">Estimated cost</span><span class="value" id="s-cost">$0.00</span><span class="hint" id="s-cost-hint">priced items only</span></div>
-        <div><span class="label">To confirm</span><span class="value warn" id="s-confirm">0</span><span class="hint">specs not locked in</span></div>
-      </div>
-
+      <div class="summary" aria-label="Build totals"><div><span class="label">Parts to source</span><span class="value" id="s-lines">14</span><span class="hint" id="s-confirm">Specifications to check</span></div><div><span class="label">Build quantity</span><span class="value" id="tb-build">1 robot</span><span class="hint"><span id="s-units">0</span> listed units, excluding unknown quantities</span></div><div><span class="label">Priced subtotal</span><span class="value" id="s-cost">Pending</span><span class="hint" id="s-cost-hint">Prices awaiting verification</span></div></div>
+      <p class="pricing-note"><strong>Amazon.ca prices checked September 14, 2026.</strong> Direct product-page prices in CAD for the linked variants. Pack prices appear beside each source; unit costs are derived from pack quantities without rounding before totals. These are sourcing options, not a record of purchases. Tax and delivery are excluded; the Pi listing includes its import-fees deposit. The three battery cells use your supplied CAD 25 price. Screws and inserts are excluded as requested.</p>
       <div class="tablewrap">
         <table class="bom" id="bom">
           <thead>
@@ -679,8 +565,7 @@ footer {
               <th scope="col">Ref</th>
               <th scope="col">Part</th>
               <th scope="col">Spec</th>
-              <th scope="col">Connects via</th>
-              <th scope="col">Rail</th>
+              <th scope="col">Source</th>
               <th scope="col" class="num">Qty</th>
               <th scope="col" class="num">Unit</th>
               <th scope="col" class="num">Line</th>
@@ -689,61 +574,15 @@ footer {
         </table>
       </div>
 
-      <div class="legend">
-        <span><span class="tag r33"><span class="dot"></span>3.3 V</span> logic from the Pi</span>
-        <span><span class="tag r5"><span class="dot"></span>5 V</span> UBEC into the Pi</span>
-        <span><span class="tag r6"><span class="dot"></span>6 V</span> servo rail</span>
-        <span><span class="tag paid">Paid</span> price from an actual order</span>
-        <span><span class="tag edited">Edited</span> your own price, saved in this browser</span>
-        <span><span class="tag confirm">Confirm</span> check against your build</span>
-      </div>
-    </section>
+      <p class="pricing-note" id="pack-total" aria-live="polite"></p><p class="pricing-note">Prices marked “Your entry” are manually entered. The parts subtotal covers only the quantity used. The pack-purchase subtotal rounds up to whole packs and combines the two UBEC rows. Manual overrides are excluded from the pack-purchase subtotal. Reset prices restores the checked Amazon unit costs.</p></section>
 
-    <section id="power" aria-labelledby="power-h">
-      <div class="section-head"><h2 id="power-h">Power budget</h2><span class="meta">Typical and peak draw per rail</span></div>
-      <p class="section-note">Momo runs two separate supply rails so the servos can never pull the Pi down. Figures are typical values from each part's datasheet rather than measurements from this robot, and both UBECs are assumed to be rated at 3 A until confirmed.</p>
-      <div class="rails" id="rails"></div>
-    </section>
+<section id="printed" aria-labelledby="printed-h"><div class="section-head"><h2 id="printed-h">Printed parts</h2><span class="meta">19 pieces per robot</span></div><div class="buildparts"><div>Body <span>×1</span></div><div>Head <span>×1</span></div><div>Head cover <span>×1</span></div><div>Arm joints <span>×4</span></div><div>Leg joints <span>×4</span></div><div>Servo covers <span>×4</span></div><div>Left legs <span>×2</span></div><div>Right legs <span>×2</span></div></div><p class="section-note">Quantities above are for one robot, from Momo_V1.3mf. Filament and printing costs are not included. <a href="https://cad.onshape.com/documents/0d4d07e094519199b8020f56/w/91877e141d18a5a534bcc007/e/0185c040ba7b9d4ce7239cbb">Open the Onshape model ↗</a></p></section>
 
-    <section id="buses" aria-labelledby="buses-h">
-      <div class="section-head"><h2 id="buses-h">Buses and pins</h2><span class="meta">40 pin header, as wired</span></div>
-      <p class="section-note">Every header pin Momo uses, coloured by the bus it belongs to. The board is drawn with the header along the top edge and pin 1 on the left. Hover or focus a pin to see where it goes.</p>
 
-      <div class="header-wrap">
-        <div class="header-board">
-          <div class="header" id="header" role="img" aria-label="Raspberry Pi 40 pin header with the pins Momo uses highlighted"></div>
-          <div class="header-caption"><span>Even pins, 2 to 40</span><span>Odd pins, 1 to 39</span></div>
-        </div>
-      </div>
-
-      <div class="legend">
-        <span><span class="tag b-p33"><span class="dot"></span>3.3 V</span></span>
-        <span><span class="tag b-p5"><span class="dot"></span>5 V</span></span>
-        <span><span class="tag b-gnd"><span class="dot"></span>Ground</span></span>
-        <span><span class="tag b-i2c"><span class="dot"></span>I2C</span> servo driver</span>
-        <span><span class="tag b-spi"><span class="dot"></span>SPI</span> display</span>
-        <span><span class="tag b-i2s"><span class="dot"></span>I2S</span> mic and amp</span>
-        <span><span class="tag b-ctl"><span class="dot"></span>GPIO</span> amp mute</span>
-      </div>
-
-      <div class="tablewrap">
-        <table class="bom pins" id="pins">
-          <thead>
-            <tr>
-              <th scope="col" class="num">Pin</th>
-              <th scope="col">GPIO</th>
-              <th scope="col">Signal</th>
-              <th scope="col">Bus</th>
-              <th scope="col">Goes to</th>
-            </tr>
-          </thead>
-        </table>
-      </div>
-    </section>
   </main>
 
   <footer>
-    <span>Momo BOM, revision A</span>
+    <span>Momo · Bill of materials · Revision B</span>
     <span>Designed by Eben Siyabalapitiya</span>
   </footer>
 
@@ -762,93 +601,218 @@ const GROUPS = [
 ];
 
 const PARTS = [
-  { group: "compute", ref: "U1", name: "Raspberry Pi Zero W", note: "Runs everything. A Zero 2 W drops in and is noticeably faster.", spec: "BCM2835, 512 MB RAM, 2.4 GHz WiFi", via: ["Host"], rail: "5", qty: 1, price: 20.00 },
-  { group: "compute", ref: "U1a", name: "microSD card", note: "Holds Raspberry Pi OS Lite and the code.", spec: "16 GB or larger, A1 rated", via: ["SD slot"], rail: null, qty: 1, price: 9.00 },
-
-  { group: "motion", ref: "U2", name: "PCA9685 servo driver", note: "Takes angle commands over I2C and drives all eight servos.", spec: "16 channel, 12 bit PWM", via: ["I2C 0x40"], rail: "33", qty: 1, price: 9.00 },
-  { group: "motion", ref: "M1-M8", name: "MG90S micro servo", note: "Two per leg. One at the hip, one at the knee.", spec: "Metal gear, 4.8 to 6 V", via: ["PWM ch 0-7"], rail: "6", qty: 8, price: 5.00 },
-
-  { group: "face", ref: "U3", name: "ST7735 TFT display", note: "The face. Every expression is drawn here.", spec: "1.8 in, 128 x 160, 16 bit colour", via: ["SPI0 CE0"], rail: "33", qty: 1, price: 10.00 },
-
-  { group: "voice", ref: "U4", name: "I2S MEMS microphone", note: "Must be I2S. Analogue and USB mics will not work with this setup.", spec: "Digital mono, I2S output", via: ["I2S in"], rail: "33", qty: 1, price: 7.00 },
-  { group: "voice", ref: "U5", name: "MAX98357A amplifier", note: "Shutdown pin on GPIO 26 keeps the speaker silent between replies.", spec: "I2S class D, 3.2 W into 4 ohm", via: ["I2S out", "GPIO 26"], rail: "5", qty: 1, price: 9.00 },
-  { group: "voice", ref: "LS1", name: "Cavity speaker, 2828", note: "The enclosed horn style sounds clearer than a bare driver.", spec: "28 x 28 mm, 4 ohm, 3 W", via: ["Amp output"], rail: null, qty: 1, price: 6.48, paid: true },
-
-  { group: "power", ref: "PS1", name: "UBEC, 5 V", note: "Feeds the Pi on its own so servo spikes never reach it.", spec: "5 V output, 3 A", via: ["5 V pin"], rail: "5", qty: 1, price: 8.00, confirm: true },
-  { group: "power", ref: "PS2", name: "UBEC, 6 V", note: "Feeds the servo rail through the driver V+ terminal.", spec: "6 V output, 3 A", via: ["V+ terminal"], rail: "6", qty: 1, price: 8.00, confirm: true },
-  { group: "power", ref: "BT1", name: "Battery", note: "Shared source for both UBECs. Confirm voltage and capacity.", spec: "To confirm", via: ["Both UBECs"], rail: null, qty: 1, price: null, confirm: true },
-
-  { group: "hardware", ref: "W1", name: "Jumper wires, female to female", note: "For the header to board connections.", spec: "20 cm, 40 pack", via: ["Header"], rail: null, qty: 1, price: 6.00 },
-  { group: "hardware", ref: "H1", name: "Screws", note: "Hold the frame, legs, and servo brackets together.", spec: "Sizes to confirm", via: ["Frame"], rail: null, qty: null, price: null, confirm: true },
-  { group: "hardware", ref: "H2", name: "Heat set inserts", note: "Only if your printed parts use them.", spec: "Size to confirm", via: ["Printed parts"], rail: null, qty: null, price: null, confirm: true }
-];
-
-const RAILS = [
   {
-    id: "5",
-    name: "5 V rail",
-    source: "PS1 UBEC, assumed 3 A",
-    rating: 3000,
-    loads: [
-      { name: "Raspberry Pi Zero W", typ: 150, peak: 350 },
-      { name: "MAX98357A amp, while speaking", typ: 150, peak: 800 },
-      { name: "ST7735 backlight, through 3.3 V", typ: 30, peak: 50 },
-      { name: "PCA9685 logic, through 3.3 V", typ: 10, peak: 10 },
-      { name: "I2S microphone, through 3.3 V", typ: 2, peak: 2 }
-    ],
-    okText: "Comfortable headroom. Even with the amp at full volume the Pi side peaks well under the UBEC rating.",
-    overText: ""
+    "group": "compute",
+    "ref": "U1",
+    "name": "Raspberry Pi Zero W",
+    "spec": "Zero W · 512 MB · WiFi",
+    "note": "Original Zero W, 1 GHz ARM11 and 512 MB RAM. Listed price includes import-fees deposit; delivery shown: CAD 5.12. Your remembered purchase cost of about CAD 49 is separate.",
+    "qty": 1,
+    "q": "Raspberry Pi Zero W board",
+    "price": 61.62,
+    "via": [],
+    "source": "https://www.amazon.ca/dp/B0FN4CN7TM",
+    "packPrice": 61.62,
+    "packQty": 1,
+    "seller": "EC Buying",
+    "checked": "2026-09-14"
   },
   {
-    id: "6",
-    name: "6 V servo rail",
-    source: "PS2 UBEC, assumed 3 A",
-    rating: 3000,
-    loads: [
-      { name: "8 x MG90S, holding a pose", typ: 640, peak: 640 },
-      { name: "Extra draw while walking", typ: 560, peak: 3360 }
-    ],
-    okText: "",
-    overText: "Brief peaks when every leg moves at once go past a 3 A UBEC, which shows up as servos twitching or skipping mid step. A 5 A UBEC on this rail gives the headroom it needs."
+    "group": "compute",
+    "ref": "U1a",
+    "name": "microSD card",
+    "spec": "32 GB · OS storage",
+    "note": "32 GB Ultra microSDHC, A1, C10, U1, with adapter. Check whether your existing Pi kit already includes a card.",
+    "qty": 1,
+    "q": "32GB microSD card A1",
+    "price": 27.99,
+    "via": [],
+    "source": "https://www.amazon.ca/dp/B073JWXGNT",
+    "packPrice": 27.99,
+    "packQty": 1,
+    "seller": "SanDisk / Top Select Canada",
+    "checked": "2026-09-14"
+  },
+  {
+    "group": "motion",
+    "ref": "U2",
+    "name": "PCA9685 servo driver",
+    "spec": "16-channel PWM · I2C",
+    "note": "Two PCA9685 boards per pack; one required per robot. Logic supply and servo power are separate.",
+    "qty": 1,
+    "q": "PCA9685 16 channel servo driver",
+    "price": 9.995,
+    "via": [],
+    "source": "https://www.amazon.ca/dp/B0CRV3MK14",
+    "packPrice": 19.99,
+    "packQty": 2,
+    "seller": "HUAREW",
+    "checked": "2026-09-14"
+  },
+  {
+    "group": "motion",
+    "ref": "M1-M8",
+    "name": "MG90S micro servo",
+    "spec": "180° positional · metal gear",
+    "note": "Eight MG90S 180-degree positional servos per pack; one full pack per robot. Listed operating voltage: 4.8–6 V.",
+    "qty": 8,
+    "q": "MG90S 180 degree servo metal gear",
+    "price": 4.24875,
+    "via": [],
+    "source": "https://www.amazon.ca/dp/B0CP9F18RT",
+    "packPrice": 33.99,
+    "packQty": 8,
+    "seller": "Miuzei",
+    "checked": "2026-09-14"
+  },
+  {
+    "group": "face",
+    "ref": "U3",
+    "name": "ST7735 TFT display",
+    "spec": "1.8 inch · 128 × 160 · SPI",
+    "note": "1.8-inch ST7735, 128 × 160, 8-pin SPI, 3.3 V. Check module mounting dimensions against the printed head.",
+    "qty": 1,
+    "q": "ST7735 1.8 inch SPI TFT 128 160",
+    "price": 11.72,
+    "via": [],
+    "source": "https://www.amazon.ca/dp/B083NYBN4Q",
+    "packPrice": 11.72,
+    "packQty": 1,
+    "seller": "Bewinner / Qinqinzi-US",
+    "checked": "2026-09-14"
+  },
+  {
+    "group": "voice",
+    "ref": "U4",
+    "name": "I2S MEMS microphone",
+    "spec": "MS3625 / INMP441 type",
+    "note": "Five INMP441 I2S microphones per pack. Confirm this model matches the installed MS3625-type board before ordering.",
+    "qty": 1,
+    "q": "INMP441 I2S microphone",
+    "price": 3.198,
+    "via": [],
+    "source": "https://www.amazon.ca/dp/B0GYDQC6WL",
+    "packPrice": 15.99,
+    "packQty": 5,
+    "seller": "BTFO / PARKTION",
+    "checked": "2026-09-14",
+    "confirm": true
+  },
+  {
+    "group": "voice",
+    "ref": "U5",
+    "name": "MAX98357A amplifier",
+    "spec": "I2S · mono amplifier",
+    "note": "One MAX98357A I2S amplifier module; listed 2.7–5.5 V supply.",
+    "qty": 1,
+    "q": "MAX98357A I2S amplifier",
+    "price": 10.99,
+    "via": [],
+    "source": "https://www.amazon.ca/dp/B0FMJZCGW9",
+    "packPrice": 10.99,
+    "packQty": 1,
+    "seller": "YZYDF / gmh0s",
+    "checked": "2026-09-14"
+  },
+  {
+    "group": "voice",
+    "ref": "LS1",
+    "name": "PATIKIL mini speaker",
+    "spec": "28 × 28 × 9.9 mm · 4 Ω · 3 W",
+    "note": "Exact Black Gold 1PCS model you specified. 165 mm lead, 1.25 mm plug spacing. Price checked on the selected one-speaker listing.",
+    "qty": 1,
+    "q": "JESSINIE 2828 4 ohm 3W cavity speaker",
+    "price": 8.99,
+    "via": [],
+    "source": "https://www.amazon.ca/dp/B0FT7JWKZ6",
+    "packPrice": 8.99,
+    "packQty": 1,
+    "seller": "PATIKIL US",
+    "checked": "2026-09-14"
+  },
+  {
+    "group": "power",
+    "ref": "PS1",
+    "name": "UBEC for the Pi",
+    "spec": "5 V · 5 A reported",
+    "note": "One of two UBECs in the shared pack. Listed 5 V/5 A output, 5.5–35 V input. Limited-time price; usual displayed price CAD 15.99 per pack.",
+    "qty": 1,
+    "confirm": true,
+    "q": "UBEC 5V 5A",
+    "price": 6.395,
+    "via": [],
+    "source": "https://www.amazon.ca/dp/B0D97FH1JS",
+    "packPrice": 12.79,
+    "packQty": 2,
+    "seller": "Nuofany",
+    "checked": "2026-09-14"
+  },
+  {
+    "group": "power",
+    "ref": "PS2",
+    "name": "UBEC for the servos",
+    "spec": "5 V · 5 A reported",
+    "note": "Second UBEC from the same pack as PS1. The pack-purchase subtotal counts the shared pack once per robot.",
+    "qty": 1,
+    "confirm": true,
+    "q": "UBEC 5V 5A",
+    "price": 6.395,
+    "via": [],
+    "source": "https://www.amazon.ca/dp/B0D97FH1JS",
+    "packPrice": 12.79,
+    "packQty": 2,
+    "seller": "Nuofany",
+    "checked": "2026-09-14"
+  },
+  {
+    "group": "power",
+    "ref": "BT1",
+    "name": "Funsto 18650 holder",
+    "spec": "3-cell holder · 150 mm leads",
+    "note": "Exact Black 3X 4pcs variant you specified: four holders, each holding three 18650 cells. Cells are priced separately below.",
+    "qty": 1,
+    "confirm": false,
+    "price": 2.9975,
+    "via": [],
+    "source": "https://www.amazon.ca/dp/B0D47T8D3X",
+    "packPrice": 11.99,
+    "packQty": 4,
+    "seller": "Funsto",
+    "checked": "2026-09-14"
+  },
+  {
+    "group": "power",
+    "ref": "BT2",
+    "name": "18650 battery cells",
+    "spec": "3 cells per robot",
+    "note": "CAD 25 for three cells, supplied by you. Cell model and capacity are not recorded; this is not an Amazon-verified price.",
+    "qty": 3,
+    "price": 8.333333333333334,
+    "packPrice": 25,
+    "packQty": 3,
+    "reported": true,
+    "via": [],
+    "source": null
+  },
+  {
+    "group": "hardware",
+    "ref": "W1",
+    "name": "Jumper wire set",
+    "spec": "Female-to-female · 40 leads",
+    "note": "One set of 40 female-to-female 20 cm jumper leads. One set per robot is a planning allowance.",
+    "qty": 1,
+    "q": "female female jumper wires 20cm 40",
+    "price": 8.99,
+    "via": [],
+    "source": "https://www.amazon.ca/dp/B09FPL7ZGM",
+    "packPrice": 8.99,
+    "packQty": 1,
+    "seller": "Chanzon",
+    "checked": "2026-09-14"
   }
 ];
 
-const SCALE_MAX = 6000;
-const TICKS = [0, 1000, 2000, 3000, 4000, 5000, 6000];
-
-const HEADER = {
-  1: "3V3", 2: "5V", 3: "GPIO 2", 4: "5V", 5: "GPIO 3", 6: "GND", 7: "GPIO 4", 8: "GPIO 14", 9: "GND", 10: "GPIO 15",
-  11: "GPIO 17", 12: "GPIO 18", 13: "GPIO 27", 14: "GND", 15: "GPIO 22", 16: "GPIO 23", 17: "3V3", 18: "GPIO 24", 19: "GPIO 10", 20: "GND",
-  21: "GPIO 9", 22: "GPIO 25", 23: "GPIO 11", 24: "GPIO 8", 25: "GND", 26: "GPIO 7", 27: "ID_SD", 28: "ID_SC", 29: "GPIO 5", 30: "GND",
-  31: "GPIO 6", 32: "GPIO 12", 33: "GPIO 13", 34: "GND", 35: "GPIO 19", 36: "GPIO 16", 37: "GPIO 26", 38: "GPIO 20", 39: "GND", 40: "GPIO 21"
-};
-
-const BUS_NAMES = { p33: "3.3 V", p5: "5 V", gnd: "Ground", i2c: "I2C", spi: "SPI", i2s: "I2S", ctl: "GPIO" };
-const BUS_ORDER = ["p5", "p33", "gnd", "i2c", "spi", "i2s", "ctl"];
-
-const USED = {
-  2: { bus: "p5", signal: "5 V in", to: "PS1 UBEC output" },
-  4: { bus: "p5", signal: "5 V", to: "MAX98357A VIN", confirm: true },
-  1: { bus: "p33", signal: "3.3 V", to: "ST7735 VCC" },
-  17: { bus: "p33", signal: "3.3 V", to: "PCA9685 VCC" },
-  6: { bus: "gnd", signal: "Ground", to: "ST7735 GND" },
-  9: { bus: "gnd", signal: "Ground", to: "PCA9685 GND" },
-  14: { bus: "gnd", signal: "Ground", to: "Mic and amp GND", confirm: true },
-  3: { bus: "i2c", signal: "SDA", to: "PCA9685 SDA" },
-  5: { bus: "i2c", signal: "SCL", to: "PCA9685 SCL" },
-  23: { bus: "spi", signal: "SCLK", to: "ST7735 SCK" },
-  19: { bus: "spi", signal: "MOSI", to: "ST7735 SDA" },
-  24: { bus: "spi", signal: "CE0", to: "ST7735 CS" },
-  22: { bus: "spi", signal: "Data or command", to: "ST7735 DC" },
-  18: { bus: "spi", signal: "Reset", to: "ST7735 RES" },
-  12: { bus: "i2s", signal: "Bit clock", to: "Mic SCK and amp BCLK" },
-  35: { bus: "i2s", signal: "Word select", to: "Mic WS and amp LRC" },
-  38: { bus: "i2s", signal: "Data in", to: "Mic SD" },
-  40: { bus: "i2s", signal: "Data out", to: "Amp DIN" },
-  37: { bus: "ctl", signal: "Amp mute", to: "Amp SD" }
-};
-
-const STORE_PRICES = "momo-bom-prices-v1";
+const STORE_PRICES = "momo-bom-prices-v2";
 const STORE_BUILD = "momo-bom-build-v1";
 const BUILD_MIN = 1;
 const BUILD_MAX = 10;
@@ -882,26 +846,8 @@ function esc(s) {
   return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 }
 
-function amps(ma) {
-  return (ma / 1000).toFixed(2) + " A";
-}
-
-function pct(ma) {
-  return Math.min(100, (ma / SCALE_MAX) * 100);
-}
-
 function robots(n) {
   return n + (n === 1 ? " robot" : " robots");
-}
-
-function railLabel(rail) {
-  if (!rail) return "None";
-  return rail === "33" ? "3.3 V" : rail + " V";
-}
-
-function railTag(rail) {
-  if (!rail) return '<span class="muted-cell">None</span>';
-  return '<span class="tag r' + rail + '"><span class="dot"></span>' + railLabel(rail) + "</span>";
 }
 
 function unitPrice(p) {
@@ -935,25 +881,24 @@ function buildParts() {
     if (!rows.length) return;
 
     const tbody = document.createElement("tbody");
-    let html = '<tr class="group"><th colspan="7" scope="rowgroup"><span class="gname">' + esc(g.name) + '</span></th>' +
+    let html = '<tr class="group"><th colspan="6" scope="rowgroup"><span class="gname">' + esc(g.name) + '</span></th>' +
       '<th class="num"><span class="gsum" data-gsum="' + g.id + '"></span></th></tr>';
 
     rows.forEach(p => {
       const via = p.via.map(v => '<span class="tag">' + esc(v) + "</span>").join("");
       const confirm = p.confirm ? '<span class="tag confirm">Confirm</span>' : "";
       const paid = p.paid ? '<span class="tag paid" data-paid="' + esc(p.ref) + '">Paid</span>' : "";
-      const edited = '<span class="tag edited" data-edited="' + esc(p.ref) + '" hidden>Edited</span>';
+      const edited = '<span class="tag edited" data-edited="' + esc(p.ref) + '" hidden>Your entry</span>';
       const inputId = "price-" + p.ref.replace(/[^A-Za-z0-9]/g, "");
 
       html += "<tr>" +
         '<td class="ref">' + esc(p.ref) + "</td>" +
         '<td class="part"><span class="stack"><span class="name">' + esc(p.name) + "</span>" + confirm + paid + edited + '</span><span class="note">' + esc(p.note) + "</span></td>" +
         '<td class="spec">' + esc(p.spec) + "</td>" +
-        '<td><span class="stack">' + via + "</span></td>" +
-        "<td>" + railTag(p.rail) + "</td>" +
+        '<td>' + (p.source ? '<a class="source-link" href="' + esc(p.source) + '" target="_blank" rel="noopener noreferrer">Amazon.ca ↗</a><span class="source-note">' + (p.checked ? esc(cad.format(p.packPrice) + " / " + p.packQty + (p.ref === "W1" ? " set" : " pcs") + " · " + p.seller + " · checked " + p.checked) : "Search · price unverified") + '</span>' : (p.reported ? '<span class="source-note">Your price · CAD 25 / 3 cells</span>' : '<span class="source-note">Confirm exact part first</span>')) + '</td>' +
         '<td class="num" data-qty="' + esc(p.ref) + '"></td>' +
         '<td class="num price-cell"><label class="price-field"><span class="cur" aria-hidden="true">$</span>' +
-          '<input class="price-input" id="' + inputId + '" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Add" data-ref="' + esc(p.ref) + '" aria-label="Unit price for ' + esc(p.name) + ', CAD"></label></td>' +
+          '<input class="price-input" id="' + inputId + '" type="number" inputmode="decimal" min="0" step="any" placeholder="Add" data-ref="' + esc(p.ref) + '" aria-label="Unit price for ' + esc(p.name) + ', CAD"></label></td>' +
         '<td class="num" data-line="' + esc(p.ref) + '"></td>' +
         "</tr>";
     });
@@ -963,7 +908,7 @@ function buildParts() {
   });
 
   const tfoot = document.createElement("tfoot");
-  tfoot.innerHTML = '<tr><td colspan="5" id="f-label">Estimated total, priced items</td><td class="num" id="f-units"></td><td></td><td class="num" id="f-cost"></td></tr>';
+  tfoot.innerHTML = '<tr><td colspan="4" id="f-label">Priced subtotal</td><td class="num" id="f-units"></td><td></td><td class="num" id="f-cost"></td></tr>';
   table.appendChild(tfoot);
 
   syncInputs();
@@ -974,8 +919,19 @@ function syncInputs() {
     const input = document.querySelector('.price-input[data-ref="' + CSS.escape(p.ref) + '"]');
     if (!input) return;
     const u = unitPrice(p);
-    input.value = u == null ? "" : u.toFixed(2);
+    input.value = u == null ? "" : String(Number(u.toFixed(5)));
   });
+}
+
+function packSubtotal() {
+  const groups = new Map();
+  PARTS.forEach(p => {
+    if ((!p.checked && !p.reported) || isEdited(p) || totalQty(p) == null) return;
+    const g = groups.get(p.source || p.ref) || { qty: 0, packQty: p.packQty, price: p.packPrice };
+    g.qty += totalQty(p);
+    groups.set(p.source || p.ref, g);
+  });
+  return [...groups.values()].reduce((sum, g) => sum + Math.ceil(g.qty / g.packQty) * g.price, 0);
 }
 
 function recalc() {
@@ -1005,103 +961,24 @@ function recalc() {
 
   GROUPS.forEach(g => {
     const el = document.querySelector('[data-gsum="' + g.id + '"]');
-    if (el) el.textContent = cad.format(groupCost[g.id] || 0);
+    if (el) el.textContent = groupCost[g.id] == null ? "Price pending" : cad.format(groupCost[g.id]);
   });
 
+  document.getElementById("pack-total").textContent = "Whole-pack subtotal: " + cad.format(packSubtotal()) + " CAD including your battery price, before tax and delivery. Excludes manual overrides.";
   document.getElementById("f-units").textContent = units;
-  document.getElementById("f-cost").textContent = cad.format(cost);
-  document.getElementById("f-label").textContent = "Estimated total for " + robots(state.build) + ", priced items";
+  document.getElementById("f-cost").textContent = unpriced === lines ? "Pending" : cad.format(cost);
+  document.getElementById("f-label").textContent = "Priced subtotal for " + robots(state.build) + ", priced items";
 
   document.getElementById("s-lines").textContent = lines;
   document.getElementById("s-units").textContent = units;
-  document.getElementById("s-cost").textContent = cad.format(cost);
-  document.getElementById("s-cost-hint").textContent = unpriced ? unpriced + " items still unpriced" : "every item priced";
-  document.getElementById("s-confirm").textContent = confirm;
+  document.getElementById("s-cost").textContent = unpriced === lines ? "Pending" : cad.format(cost);
+  document.getElementById("s-cost-hint").textContent = unpriced ? unpriced + " items still unpriced" : "All rows priced; batteries use your supplied cost";
+  document.getElementById("s-confirm").textContent = confirm + " specifications to confirm";
 
   document.getElementById("build-out").textContent = robots(state.build);
   document.getElementById("tb-build").textContent = robots(state.build);
   document.getElementById("build-dec").disabled = state.build <= BUILD_MIN;
   document.getElementById("build-inc").disabled = state.build >= BUILD_MAX;
-}
-
-function renderRails() {
-  const host = document.getElementById("rails");
-  host.innerHTML = "";
-
-  RAILS.forEach(r => {
-    const typ = r.loads.reduce((s, l) => s + l.typ, 0);
-    const peak = r.loads.reduce((s, l) => s + l.peak, 0);
-    const over = peak > r.rating;
-
-    const ticks = TICKS.map(t => '<span style="left:' + pct(t) + '%">' + (t / 1000) + " A</span>").join("");
-    const loads = r.loads.map(l =>
-      '<div class="row"><span class="n">' + esc(l.name) + '</span><span class="m">' + l.typ + '</span><span class="m">' + l.peak + "</span></div>"
-    ).join("");
-
-    const card = document.createElement("article");
-    card.className = "rail";
-    card.dataset.rail = r.id;
-    card.innerHTML =
-      '<div class="rail-head"><h3>' + esc(r.name) + '</h3><span class="src">' + esc(r.source) + "</span></div>" +
-      '<div class="chart" role="img" aria-label="' + esc(r.name) + ": typical " + amps(typ) + ", peak " + amps(peak) + ", rated " + amps(r.rating) + '">' +
-        '<div class="track">' +
-          '<div class="bar peak" style="width:' + pct(peak) + '%"></div>' +
-          '<div class="bar" style="width:' + pct(typ) + '%"></div>' +
-          '<div class="rating" style="left:' + pct(r.rating) + '%"><span>' + amps(r.rating) + " rated</span></div>" +
-        "</div>" +
-        '<div class="axis">' + ticks + "</div>" +
-      "</div>" +
-      '<div class="figs">' +
-        '<div class="fig"><span class="key label"><span class="swatch"></span>Typical</span><span class="v">' + amps(typ) + "</span></div>" +
-        '<div class="fig"><span class="key label"><span class="swatch peak"></span>Peak</span><span class="v">' + amps(peak) + "</span></div>" +
-        '<div class="fig"><span class="key label"><span class="swatch rate"></span>Headroom at peak</span><span class="v">' + (over ? "-" : "") + amps(Math.abs(r.rating - peak)) + "</span></div>" +
-      "</div>" +
-      '<div class="loads"><div class="row head"><span>Load</span><span class="m">Typ mA</span><span class="m">Peak mA</span></div>' + loads + "</div>" +
-      '<p class="verdict ' + (over ? "over" : "ok") + '"><span class="flag">' + (over ? "Over at peak" : "Within rating") + "</span><span>" + esc(over ? r.overText : r.okText) + "</span></p>";
-
-    host.appendChild(card);
-  });
-}
-
-function renderPins() {
-  const header = document.getElementById("header");
-  header.innerHTML = "";
-
-  for (let n = 1; n <= 40; n++) {
-    const used = USED[n];
-    const even = n % 2 === 0;
-    const el = document.createElement("span");
-    el.className = "pin" + (n === 1 ? " first" : "") + (used ? " used b-" + used.bus : "");
-    el.style.gridColumn = Math.ceil(n / 2);
-    el.style.gridRow = even ? 1 : 2;
-    el.textContent = n;
-    el.title = "Pin " + n + ", " + HEADER[n] + (used ? ", " + used.signal + " to " + used.to : ", unused");
-    if (used) el.tabIndex = 0;
-    header.appendChild(el);
-  }
-
-  const table = document.getElementById("pins");
-  table.querySelectorAll("tbody").forEach(n => n.remove());
-  const tbody = document.createElement("tbody");
-
-  const rows = Object.keys(USED).map(Number).sort((a, b) => {
-    const d = BUS_ORDER.indexOf(USED[a].bus) - BUS_ORDER.indexOf(USED[b].bus);
-    return d || a - b;
-  });
-
-  tbody.innerHTML = rows.map(n => {
-    const u = USED[n];
-    const status = u.confirm ? ' <span class="tag confirm">Confirm</span>' : "";
-    return "<tr>" +
-      '<td class="num">' + n + "</td>" +
-      '<td class="mono">' + esc(HEADER[n]) + "</td>" +
-      "<td>" + esc(u.signal) + "</td>" +
-      '<td><span class="tag b-' + u.bus + '"><span class="dot"></span>' + BUS_NAMES[u.bus] + "</span></td>" +
-      '<td><span class="stack">' + esc(u.to) + status + "</span></td>" +
-      "</tr>";
-  }).join("");
-
-  table.appendChild(tbody);
 }
 
 function exportRows() {
@@ -1113,18 +990,18 @@ function exportRows() {
       ref: p.ref,
       part: p.name,
       spec: p.spec,
-      via: p.via.join(", "),
-      rail: railLabel(p.rail),
+      via: p.source || (p.reported ? "User-supplied price" : "Confirm exact part"),
+      pack: (p.checked || p.reported) ? p.packQty + " for CAD " + p.packPrice.toFixed(2) : "TBD",
       qty: q == null ? "TBD" : String(q),
-      unit: u == null ? "TBD" : u.toFixed(2),
+      unit: u == null ? "TBD" : String(Number(u.toFixed(5))),
       line: lt == null ? "TBD" : lt.toFixed(2),
-      status: p.confirm ? "Confirm" : (isEdited(p) ? "Edited" : (p.paid ? "Paid" : ""))
+      status: (isEdited(p) ? "Manual entry, not verified" : (p.reported ? "User-supplied price, not Amazon verified" : p.checked ? "Amazon listing checked " + p.checked : "Amazon price unverified")) + (p.confirm ? "; confirm specification" : "")
     };
   });
 }
 
 const EXPORT_COLS = [
-  ["ref", "Ref"], ["part", "Part"], ["spec", "Spec"], ["via", "Connects via"], ["rail", "Rail"],
+  ["ref", "Ref"], ["part", "Part"], ["spec", "Spec"], ["via", "Amazon source/search"], ["pack", "Listed pack"],
   ["qty", "Qty"], ["unit", "Unit CAD"], ["line", "Line CAD"], ["status", "Status"]
 ];
 
@@ -1141,7 +1018,8 @@ function toMarkdown() {
   const rule = "| " + EXPORT_COLS.map(c => (c[0] === "qty" || c[0] === "unit" || c[0] === "line") ? "---:" : "---").join(" | ") + " |";
   const body = exportRows().map(r => "| " + EXPORT_COLS.map(c => cell(r[c[0]])).join(" | ") + " |").join("\n");
   const total = PARTS.reduce((s, p) => s + (lineTotal(p) || 0), 0);
-  return "Momo bill of materials, " + robots(state.build) + "\n\n" + head + "\n" + rule + "\n" + body + "\n\nEstimated total for priced items: " + cad.format(total) + "\n";
+  const priced = PARTS.filter(p => lineTotal(p) != null).length;
+  return "Momo bill of materials, " + robots(state.build) + "\n\n" + head + "\n" + rule + "\n" + body + "\n\nPriced subtotal (excludes missing items, tax and shipping): " + (priced ? cad.format(total) : "Pending") + ". " + (PARTS.length - priced) + " rows unpriced.\nWhole-pack subtotal (excludes unmatched parts, manual overrides, tax and delivery): " + cad.format(packSubtotal()) + "\n";
 }
 
 let toastTimer = null;
@@ -1196,7 +1074,7 @@ function wire() {
     const raw = input.value.trim();
     const n = raw === "" ? null : Number(raw);
     if (raw !== "" && (!isFinite(n) || n < 0)) return;
-    state.prices[ref] = n == null ? null : Math.round(n * 100) / 100;
+    state.prices[ref] = n == null ? null : Math.round(n * 100000) / 100000;
     writeStore(STORE_PRICES, state.prices);
     recalc();
   });
@@ -1206,7 +1084,7 @@ function wire() {
     if (!input) return;
     const p = PARTS.find(x => x.ref === input.dataset.ref);
     const u = p ? unitPrice(p) : null;
-    input.value = u == null ? "" : u.toFixed(2);
+    input.value = u == null ? "" : String(Number(u.toFixed(5)));
   });
 
   document.getElementById("copy-csv").addEventListener("click", () => copyText(toCSV(), "CSV"));
@@ -1218,7 +1096,7 @@ function wire() {
     clearStore(STORE_PRICES);
     syncInputs();
     recalc();
-    toast("Prices reset to the listed estimates");
+    toast("Amazon prices restored. Unmatched items remain blank.");
   });
 }
 
@@ -1239,8 +1117,6 @@ function init() {
 
   buildParts();
   recalc();
-  renderRails();
-  renderPins();
   wire();
 }
 
