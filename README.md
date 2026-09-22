@@ -1,6 +1,6 @@
 # Momo
 
-Built by Eben Siyabalapitiya.
+Built by Eben Siyabalapitiya. Full project site, build guide, and more at [meetmomo.life](https://meetmomo.life/).
 
 ![Momo, a four legged robot with glowing blue eyes on a small screen](docs/momo.jpg)
 
@@ -76,6 +76,7 @@ On the actual Pi, the files inside `core/` all sit together in one flat folder r
 
 Built and maintained by Eben Siyabalapitiya.
 
+- Momo website: https://meetmomo.life/
 - Portfolio: https://ebensiyabalapitiya.site
 - GitHub: https://github.com/Eben-Siyabalapitiya
 - LinkedIn: https://www.linkedin.com/in/eben-siyabalapitiya/
